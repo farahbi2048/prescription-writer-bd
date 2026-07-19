@@ -1,0 +1,6 @@
+{
+  "name": "Prescription Writer BD",
+  "description": "An interactive, feature-rich medical prescription writer tool styled after the popular BD medical software workflow, complete with clinical calculators (BMI, Insulin, Z-Score, BMR, EDD), page dimensions setup, and a database simulator.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
