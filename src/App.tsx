@@ -35,6 +35,7 @@ import {
 } from './data';
 import Calculators from './components/Calculators';
 import PageLayoutSimulator from './components/PageLayoutSimulator';
+import AiScribe from './components/AiScribe';
 
 export default function App() {
   // ---- Persisted or Live States ----
@@ -75,7 +76,7 @@ export default function App() {
 
   // ---- Active Workspace Selection States ----
   const [activeTab, setActiveTab] = useState<
-    'PrescriptionPad' | 'AllSaved' | 'Directory' | 'Appointments' | 'Payments' | 'SMS' | 'HeaderEdit' | 'PageSetup'
+    'PrescriptionPad' | 'AiScribe' | 'AllSaved' | 'Directory' | 'Appointments' | 'Payments' | 'SMS' | 'HeaderEdit' | 'PageSetup'
   >('PrescriptionPad');
 
   // ---- Active Prescription Editor States ----
@@ -372,6 +373,18 @@ export default function App() {
             >
               <Users className="w-3.5 h-3.5 inline mr-1" />
               Saved Patients & History
+            </button>
+            <button
+              onClick={() => setActiveTab('AiScribe')}
+              className={`px-2.5 py-1.5 rounded text-xs font-bold tracking-wide transition-all ${
+                activeTab === 'AiScribe'
+                  ? 'bg-indigo-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+              }`}
+              id="nav-tab-ai-scribe"
+            >
+              <Sparkles className="w-3.5 h-3.5 inline mr-1" />
+              AI Scribe
             </button>
             <button
               onClick={() => setActiveTab('Directory')}
@@ -1696,6 +1709,13 @@ export default function App() {
             settings={pageSetup} 
             onChangeSettings={(updated) => setPageSetup(prev => ({ ...prev, ...updated }))} 
             onReset={() => setPageSetup(INITIAL_PAGE_SETUP)} 
+          />
+        )}
+
+        {activeTab === 'AiScribe' && (
+          <AiScribe
+            patient={currentPatient}
+            onApplyReviewedDraft={handleUpdatePatient}
           />
         )}
 

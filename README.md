@@ -89,6 +89,32 @@ The repository includes a GitHub Actions workflow at [`.github/workflows/deploy.
 2. Under **Build and deployment**, choose **GitHub Actions** as the source.
 3. Push to the `main` branch. The workflow builds the Vite app and deploys the generated `dist/` folder.
 
+## AI Scribe local integration
+
+The optional AI Scribe workflow adds audio-to-SOAP documentation drafting and an informational OpenFDA label lookup. It uses a separate Python API and is intended for local development only.
+
+```text
+React app (port 3000) -> FastAPI AI Scribe API (port 8000) -> Gemini / OpenFDA
+```
+
+Start the API in a first terminal:
+
+```powershell
+cd backend
+python -m pip install -r requirements.txt
+Copy-Item .env.example .env
+# Edit backend/.env and add GEMINI_API_KEY before continuing.
+python -m uvicorn main:app --reload --port 8000
+```
+
+Start the React application in a second terminal from the repository root:
+
+```powershell
+npm run dev
+```
+
+Open the **AI Scribe** tab, upload a non-identifiable demo MP3/WAV, edit the extracted draft, and explicitly apply it to the active patient. The AI Scribe API is not deployed by the included GitHub Pages workflow; hosting it publicly requires a secured backend, authentication, encrypted storage, access controls, audit logging, and a privacy/security review.
+
 ## Data, privacy and clinical-safety notice
 
 This project is a student portfolio prototype, not a production clinical information system. It has no authentication, server-side database, encryption, audit trail, role-based access control, regulatory review, or clinical validation. Data is stored only in the current browser's `localStorage` and may be removed when browser storage is cleared. Never enter real patient-identifiable or clinical data into this prototype.
