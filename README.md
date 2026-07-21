@@ -124,3 +124,8 @@ The calculator outputs and prescription-related content are demonstration featur
 ## Status
 
 Built as a front-end healthcare workflow prototype. Future work includes a secure backend, authentication, encrypted data storage, audit logging, validated clinical decision support, test coverage and accessibility review.
+
+## Copyright
+
+© 2026 Farah Bi. All rights reserved.
+
