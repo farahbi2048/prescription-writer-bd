@@ -89,6 +89,26 @@ The repository includes a GitHub Actions workflow at [`.github/workflows/deploy.
 2. Under **Build and deployment**, choose **GitHub Actions** as the source.
 3. Push to the `main` branch. The workflow builds the Vite app and deploys the generated `dist/` folder.
 
+## Backend foundation (SQLite first)
+
+The repository now includes a FastAPI foundation in `backend/app/` for the planned move from browser-only storage to a secure server-side application:
+
+- SQLAlchemy models for users, patients, prescriptions, AI sessions and audit logs
+- Doctor registration/login with bcrypt password hashing and JWT access tokens
+- Protected, doctor-scoped patient CRUD endpoints
+- SQLite by default, with `DATABASE_URL` ready to switch to PostgreSQL later
+
+Create `backend/.env` from `backend/.env.example`, set a long unique `JWT_SECRET_KEY`, then install and run the backend:
+
+```powershell
+cd backend
+python -m pip install -r requirements.txt
+Copy-Item .env.example .env
+python -m uvicorn main:app --reload --port 8000
+```
+
+The API documentation is then available at `http://localhost:8000/docs`. The current React workflow still uses browser storage; connecting its existing screens to these protected endpoints is the next migration step.
+
 ## AI Scribe local integration
 
 The optional AI Scribe workflow adds audio-to-SOAP documentation drafting and an informational OpenFDA label lookup. It uses a separate Python API and is intended for local development only.
