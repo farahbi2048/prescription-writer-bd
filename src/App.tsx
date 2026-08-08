@@ -39,15 +39,30 @@ import PageLayoutSimulator from './components/PageLayoutSimulator';
 import AiScribe from './components/AiScribe';
 import AuthGateway from './components/AuthGateway';
 import { useAuth } from './context/AuthContext';
+import { BackendStatus } from './config';
+import { useBackendStatus } from './hooks/useBackendStatus';
+
+const normalizePatientTemperature = (patient: Patient): Patient => ({
+  ...patient,
+  temp: patient.temp.replace(/\s*°?F$/i, ''),
+});
 
 export default function App() {
-  const { user, loading, logout } = useAuth();
+  const { user, loading } = useAuth();
+  const backendStatus = useBackendStatus();
   if (loading) return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white font-semibold">Loading secure workspace…</div>;
-  if (!user) return <AuthGateway />;
+  if (!user) return <AuthGateway backendStatus={backendStatus} />;
+  return <Workspace backendStatus={backendStatus} />;
+}
+
+function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
+  const { user, accessToken, isDemo, logout } = useAuth();
+  if (!user) return null;
   // ---- Persisted or Live States ----
   const [patients, setPatients] = useState<Patient[]>(() => {
     const local = localStorage.getItem('bd_prescription_patients');
-    return local ? JSON.parse(local) : INITIAL_PATIENTS;
+    const savedPatients: Patient[] = local ? JSON.parse(local) : INITIAL_PATIENTS;
+    return savedPatients.map(normalizePatientTemperature);
   });
 
   const [appointments, setAppointments] = useState<Appointment[]>(() => {
@@ -144,7 +159,7 @@ export default function App() {
 
   // ---- Patient List Selection and Loading ----
   const handleSelectPatient = (p: Patient) => {
-    setCurrentPatient({ ...p });
+    setCurrentPatient(normalizePatientTemperature(p));
     // Also simulate loading empty medication or populate default
     setRxDrugs([
       { id: 'rx-tmp-1', brandName: 'Napa Extend 665mg', dose: '1+0+1', duration: '5', durationUnit: 'Days', beforeFood: false, afterFood: true },
@@ -174,7 +189,7 @@ export default function App() {
       cc: '',
       bp: '120/80 mmHg',
       pulse: '76',
-      temp: '98.4°F',
+      temp: '98.4',
       heart: 'NAD',
       lungs: 'NAD',
       abd: 'Soft',
@@ -479,6 +494,19 @@ export default function App() {
  
         </div>
       </header>
+
+      {isDemo && (
+        <div className="border-b border-amber-200 bg-amber-50">
+          <div className="max-w-7xl mx-auto px-4 py-2 flex flex-wrap items-center justify-between gap-2 text-xs">
+            <span className="font-semibold text-amber-900">
+              Portfolio demo — all patient records are synthetic and edits stay in this browser.
+            </span>
+            <span className={`font-bold ${backendStatus === 'online' ? 'text-emerald-700' : 'text-amber-700'}`}>
+              Backend: {backendStatus === 'online' ? 'Ready' : backendStatus === 'starting' ? 'Starting…' : backendStatus === 'offline' ? 'Temporarily unavailable' : 'Not configured'}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* 2. MAIN HUB WORKSPACE AREA */}
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-6">
@@ -1420,7 +1448,7 @@ export default function App() {
                                 cc: '',
                                 bp: '120/80 mmHg',
                                 pulse: '72',
-                                temp: '98.4°F',
+                                temp: '98.4',
                                 heart: 'NAD',
                                 lungs: 'NAD',
                                 abd: 'Soft',
@@ -1732,6 +1760,9 @@ export default function App() {
           <AiScribe
             patient={currentPatient}
             onApplyReviewedDraft={handleUpdatePatient}
+            backendStatus={backendStatus}
+            accessToken={accessToken}
+            isDemo={isDemo}
           />
         )}
 

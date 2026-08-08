@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { AlertTriangle, AudioLines, CheckCircle2, FileAudio, LoaderCircle, ShieldAlert } from 'lucide-react';
 import { Patient } from '../types';
+import { BackendStatus, MEDSCRIBE_API_URL } from '../config';
 
 type SoapDraft = {
   chief_complaint: string;
@@ -27,11 +28,12 @@ type AnalysisResult = {
 interface AiScribeProps {
   patient: Patient;
   onApplyReviewedDraft: (updated: Partial<Patient>) => void;
+  backendStatus: BackendStatus;
+  accessToken: string | null;
+  isDemo: boolean;
 }
 
-const API_BASE_URL = import.meta.env.VITE_MEDSCRIBE_API_URL || 'http://localhost:8000';
-
-export default function AiScribe({ patient, onApplyReviewedDraft }: AiScribeProps) {
+export default function AiScribe({ patient, onApplyReviewedDraft, backendStatus, accessToken, isDemo }: AiScribeProps) {
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [draft, setDraft] = useState<SoapDraft | null>(null);
   const [drugSafety, setDrugSafety] = useState<DrugSafety[]>([]);
@@ -45,6 +47,18 @@ export default function AiScribe({ patient, onApplyReviewedDraft }: AiScribeProp
   };
 
   const analyseAudio = async () => {
+    if (isDemo) {
+      setError('Live AI processing is protected from public misuse. Sign in with a test account to process synthetic audio.');
+      return;
+    }
+    if (!MEDSCRIBE_API_URL || backendStatus !== 'online') {
+      setError('The AI backend is still starting. Try again when the status shows Ready.');
+      return;
+    }
+    if (!accessToken) {
+      setError('Sign in before using live AI processing.');
+      return;
+    }
     if (!audioFile) {
       setError('Select an MP3 or WAV visit recording first.');
       return;
@@ -56,8 +70,9 @@ export default function AiScribe({ patient, onApplyReviewedDraft }: AiScribeProp
     try {
       const formData = new FormData();
       formData.append('audio', audioFile);
-      const response = await fetch(`${API_BASE_URL}/api/visit-audio`, {
+      const response = await fetch(`${MEDSCRIBE_API_URL}/api/visit-audio`, {
         method: 'POST',
+        headers: { Authorization: `Bearer ${accessToken}` },
         body: formData,
       });
       const payload = await response.json();
@@ -119,12 +134,16 @@ export default function AiScribe({ patient, onApplyReviewedDraft }: AiScribeProp
             <input type="file" accept="audio/mpeg,audio/mp3,audio/wav,audio/x-wav,.mp3,.wav" className="hidden" onChange={(event) => setAudioFile(event.target.files?.[0] || null)} />
           </label>
           <span className="text-xs text-slate-500 truncate max-w-full">{audioFile ? audioFile.name : 'No file selected'}</span>
-          <button onClick={analyseAudio} disabled={isProcessing || !audioFile} className="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white text-sm font-bold px-4 py-2 rounded shadow-sm">
+          <button onClick={analyseAudio} disabled={isProcessing || !audioFile || isDemo || backendStatus !== 'online'} className="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white text-sm font-bold px-4 py-2 rounded shadow-sm">
             {isProcessing ? <LoaderCircle className="w-4 h-4 animate-spin" /> : <AudioLines className="w-4 h-4" />}
             {isProcessing ? 'Processing recording…' : 'Create draft'}
           </button>
         </div>
-        <p className="text-[11px] text-slate-400 mt-3">API: {API_BASE_URL} · The Python AI backend must be running before processing.</p>
+        <p className="text-[11px] text-slate-400 mt-3">
+          {isDemo
+            ? 'Portfolio mode shows the workflow with synthetic data; sign in to run protected AI processing.'
+            : `AI backend: ${backendStatus === 'online' ? 'Ready' : backendStatus === 'starting' ? 'Starting…' : 'Unavailable'}`}
+        </p>
         {error && <p className="mt-3 p-3 rounded bg-rose-50 text-rose-700 border border-rose-200 text-sm">{error}</p>}
       </div>
 

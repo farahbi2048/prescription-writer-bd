@@ -1,24 +1,29 @@
 import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
 
+import { API_BASE_URL } from '../config';
+
 export type AuthUser = {
   id: string;
   full_name: string;
   email: string;
   role: string;
+  is_demo?: boolean;
 };
 
 type LoginInput = { email: string; password: string };
 type RegisterInput = LoginInput & { fullName: string };
 type AuthContextValue = {
   user: AuthUser | null;
+  accessToken: string | null;
+  isDemo: boolean;
   loading: boolean;
   login: (input: LoginInput) => Promise<void>;
   register: (input: RegisterInput) => Promise<void>;
+  enterDemo: () => void;
   logout: () => void;
 };
 
 const TOKEN_KEY = 'prescription_writer_access_token';
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 async function readResponse(response: Response) {
@@ -29,6 +34,7 @@ async function readResponse(response: Response) {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -37,14 +43,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
       return;
     }
+    setAccessToken(token);
     fetch(`${API_BASE_URL}/api/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
       .then(readResponse)
       .then(setUser)
-      .catch(() => localStorage.removeItem(TOKEN_KEY))
+      .catch(() => {
+        localStorage.removeItem(TOKEN_KEY);
+        setAccessToken(null);
+      })
       .finally(() => setLoading(false));
   }, []);
 
   const login = async ({ email, password }: LoginInput) => {
+    if (!API_BASE_URL) throw new Error('The live backend is not configured yet. Use the portfolio demo for now.');
     const body = new URLSearchParams({ username: email, password });
     const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
       method: 'POST',
@@ -53,10 +64,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     const payload = await readResponse(response);
     localStorage.setItem(TOKEN_KEY, payload.access_token);
+    setAccessToken(payload.access_token);
     setUser(payload.user);
   };
 
   const register = async ({ fullName, email, password }: RegisterInput) => {
+    if (!API_BASE_URL) throw new Error('The live backend is not configured yet. Use the portfolio demo for now.');
     const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -66,12 +79,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await login({ email, password });
   };
 
+  const enterDemo = () => {
+    localStorage.removeItem(TOKEN_KEY);
+    setAccessToken(null);
+    setUser({
+      id: 'portfolio-demo',
+      full_name: 'Portfolio Demo Clinician',
+      email: 'demo@example.invalid',
+      role: 'demo',
+      is_demo: true,
+    });
+  };
+
   const logout = () => {
     localStorage.removeItem(TOKEN_KEY);
+    setAccessToken(null);
     setUser(null);
   };
 
-  const value = useMemo(() => ({ user, loading, login, register, logout }), [user, loading]);
+  const isDemo = user?.is_demo === true;
+  const value = useMemo(
+    () => ({ user, accessToken, isDemo, loading, login, register, enterDemo, logout }),
+    [user, accessToken, isDemo, loading],
+  );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

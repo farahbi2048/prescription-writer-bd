@@ -2,9 +2,14 @@ import { FormEvent, useState } from 'react';
 import { ArrowRight, LoaderCircle, ShieldCheck, Stethoscope } from 'lucide-react';
 
 import { useAuth } from '../context/AuthContext';
+import { BackendStatus, PORTFOLIO_DEMO_ENABLED } from '../config';
 
-export default function AuthGateway() {
-  const { login, register } = useAuth();
+interface AuthGatewayProps {
+  backendStatus: BackendStatus;
+}
+
+export default function AuthGateway({ backendStatus }: AuthGatewayProps) {
+  const { login, register, enterDemo } = useAuth();
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -45,6 +50,20 @@ export default function AuthGateway() {
             {error && <p className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}
             <button disabled={submitting} className="w-full flex justify-center items-center gap-2 rounded-lg bg-blue-700 py-3 text-sm font-bold text-white hover:bg-blue-800 disabled:bg-slate-400">{submitting ? <LoaderCircle className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}{mode === 'login' ? 'Sign in' : 'Create account'}</button>
           </form>
+          {PORTFOLIO_DEMO_ENABLED && (
+            <div className="mt-5 border-t border-slate-200 pt-5">
+              <button
+                type="button"
+                onClick={enterDemo}
+                className="w-full rounded-lg border border-blue-200 bg-blue-50 py-3 text-sm font-bold text-blue-800 hover:bg-blue-100"
+              >
+                Try portfolio demo
+              </button>
+              <p className="mt-2 text-center text-[11px] text-slate-500">
+                Synthetic records load immediately. Live backend: {backendStatus === 'online' ? 'ready' : backendStatus === 'starting' ? 'starting' : 'optional'}.
+              </p>
+            </div>
+          )}
           <p className="mt-6 text-center text-sm text-slate-600">{mode === 'login' ? "Don't have an account?" : 'Already have an account?'} <button type="button" onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); }} className="font-bold text-blue-700 hover:underline">{mode === 'login' ? 'Register now' : 'Sign in'}</button></p>
         </div>
       </section>
