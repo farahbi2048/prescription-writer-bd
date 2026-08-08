@@ -20,7 +20,8 @@ import {
   Stethoscope,
   Info,
   Layers,
-  Sparkles
+  Sparkles,
+  LogOut
 } from 'lucide-react';
 
 // Import local submodules and data
@@ -36,8 +37,13 @@ import {
 import Calculators from './components/Calculators';
 import PageLayoutSimulator from './components/PageLayoutSimulator';
 import AiScribe from './components/AiScribe';
+import AuthGateway from './components/AuthGateway';
+import { useAuth } from './context/AuthContext';
 
 export default function App() {
+  const { user, loading, logout } = useAuth();
+  if (loading) return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white font-semibold">Loading secure workspace…</div>;
+  if (!user) return <AuthGateway />;
   // ---- Persisted or Live States ----
   const [patients, setPatients] = useState<Patient[]>(() => {
     const local = localStorage.getItem('bd_prescription_patients');
@@ -460,6 +466,16 @@ export default function App() {
             </button>
 
           </nav>
+
+          <div className="flex items-center gap-2 border-l border-slate-200 pl-3">
+            <div className="hidden lg:block text-right leading-tight">
+              <p className="text-xs font-bold text-slate-800">{user.full_name}</p>
+              <p className="text-[10px] uppercase tracking-wide text-slate-500">{user.role}</p>
+            </div>
+            <button onClick={logout} className="inline-flex items-center gap-1.5 rounded border border-slate-300 px-2.5 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100" title="Sign out">
+              <LogOut className="w-3.5 h-3.5" /> Logout
+            </button>
+          </div>
  
         </div>
       </header>
