@@ -1,131 +1,31 @@
-<h1 align="center">Prescription Writer BD</h1>
+# Prescription Writer BD
 
-<p align="center">
-  A React and TypeScript healthcare workflow prototype for drafting prescriptions, managing patient visits,
-  performing clinical calculations, and configuring prescription-print layouts.
-</p>
+A React/Vite prescription workflow with authenticated FastAPI services and an AI-assisted clinician review workspace.
 
-<p align="center">
-  <img alt="status" src="https://img.shields.io/badge/status-prototype-orange">
-  <img alt="stack" src="https://img.shields.io/badge/stack-React%20%7C%20TypeScript%20%7C%20Vite-blue">
-  <img alt="node" src="https://img.shields.io/badge/node-%3E%3D20-green">
-</p>
+## Portfolio demo
 
----
+Select **Try portfolio demo** to explore synthetic patients, prescriptions, appointments, payments, calculators, and print layouts immediately. Demo mode never requires the backend and never sends its synthetic records to the API.
 
-## The problem
+Live AI processing is protected behind authentication to prevent public misuse of the configured Gemini key. Never upload real patient recordings or identifying information to a public portfolio deployment.
 
-Clinical documentation and prescription preparation can require repeatedly entering patient demographics, examination findings, clinical history, medication details, follow-up information, and billing records. This prototype explores a single browser-based workspace that keeps these tasks together while providing a print-oriented prescription layout.
+## Local frontend
 
-## The approach
+1. Copy `.env.example` to `.env.local`.
+2. Run `npm install`.
+3. Run `npm run dev`.
 
-The application uses a tabbed, client-side workflow. Patient and prescription information is held in typed React state, persisted locally in the browser, and reused across the relevant screens.
+## Local backend
 
-| # | Workflow step | What happens |
-|---|---|---|
-| 1 | **Patient selection** | Select an existing demo patient or start a new patient record with demographics, history, examination and diagnosis fields. |
-| 2 | **Medication entry** | Search the local Bangladesh brand-index dataset, choose a medicine, and add dose, duration and food instructions to the prescription. |
-| 3 | **Clinical calculations** | Calculate BMI, insulin-dose suggestions, BMR, paediatric growth-screening values and estimated delivery date (EDD) from entered patient data. |
-| 4 | **Save visit** | Persist the active patient record locally; simulate a payment record and complete a linked appointment when applicable. |
-| 5 | **Layout and print** | Configure header details and centimetre-based prescription-pad dimensions, preview the layout, then invoke the browser print dialog. |
+1. Copy `backend/.env.example` to `backend/.env` and add a Gemini API key and random JWT secret.
+2. Install `backend/requirements.txt` in a virtual environment.
+3. From `backend`, run `uvicorn main:app --reload`.
 
-```mermaid
-graph LR
-    A[Patient profile] --> B[Clinical details and medications]
-    B --> C[Clinical calculators]
-    C --> D[Save prescription]
-    D --> E[Local browser storage]
-    E --> F[History, appointments, payments and print]
-```
+## Deployment
 
-## Tech stack
+- Import the repository into Vercel for the Vite frontend.
+- Create a Render Blueprint from the root `render.yaml` for the FastAPI backend.
+- In Render, provide `GEMINI_API_KEY` and a long random `JWT_SECRET_KEY`.
+- In Vercel, set `VITE_API_BASE_URL` and `VITE_MEDSCRIBE_API_URL` to the Render service URL, and set `VITE_DEMO_MODE=true`.
+- Redeploy Vercel after changing environment variables.
 
-**Frontend** — React 19 · TypeScript · Vite · Tailwind CSS · Lucide React
-
-**State and persistence** — React Hooks (`useState`, `useEffect`) · Browser `localStorage`
-
-**Tooling and deployment** — npm · TypeScript compiler · GitHub Actions · GitHub Pages
-
-## Repository layout
-
-```
-src/
-  main.tsx                         application entry point; mounts React into index.html
-  App.tsx                          primary workflow, state management and screen composition
-  data.ts                          local seed data: medicines, patients, appointments and settings
-  types.ts                         shared TypeScript interfaces for application data
-  index.css                        global and print styles
-  components/
-    Calculators.tsx                BMI, insulin, BMR, Z-score and EDD calculators
-    PageLayoutSimulator.tsx        prescription-pad dimension controls and visual preview
-.github/workflows/deploy.yml       GitHub Pages build and deployment workflow
-vite.config.ts                     Vite, React and Tailwind configuration
-```
-
-## Getting started
-
-**Prerequisite:** Node.js 20 or newer.
-
-```bash
-npm install
-npm run dev
-```
-
-Open the local address shown by Vite (normally `http://localhost:3000`).
-
-Useful commands:
-
-```bash
-npm run lint     # TypeScript type check
-npm run build    # Production build to dist/
-npm run preview  # Preview the production build locally
-```
-
-## GitHub Pages deployment
-
-The repository includes a GitHub Actions workflow at [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml). After pushing the repository to GitHub:
-
-1. Open **Settings → Pages** in the GitHub repository.
-2. Under **Build and deployment**, choose **GitHub Actions** as the source.
-3. Push to the `main` branch. The workflow builds the Vite app and deploys the generated `dist/` folder.
-
-## AI Scribe local integration
-
-The optional AI Scribe workflow adds audio-to-SOAP documentation drafting and an informational OpenFDA label lookup. It uses a separate Python API and is intended for local development only.
-
-```text
-React app (port 3000) -> FastAPI AI Scribe API (port 8000) -> Gemini / OpenFDA
-```
-
-Start the API in a first terminal:
-
-```powershell
-cd backend
-python -m pip install -r requirements.txt
-Copy-Item .env.example .env
-# Edit backend/.env and add GEMINI_API_KEY before continuing.
-python -m uvicorn main:app --reload --port 8000
-```
-
-Start the React application in a second terminal from the repository root:
-
-```powershell
-npm run dev
-```
-
-Open the **AI Scribe** tab, upload a non-identifiable demo MP3/WAV, edit the extracted draft, and explicitly apply it to the active patient. The AI Scribe API is not deployed by the included GitHub Pages workflow; hosting it publicly requires a secured backend, authentication, encrypted storage, access controls, audit logging, and a privacy/security review.
-
-## Data, privacy and clinical-safety notice
-
-This project is a student portfolio prototype, not a production clinical information system. It has no authentication, server-side database, encryption, audit trail, role-based access control, regulatory review, or clinical validation. Data is stored only in the current browser's `localStorage` and may be removed when browser storage is cleared. Never enter real patient-identifiable or clinical data into this prototype.
-
-The calculator outputs and prescription-related content are demonstration features only and must not be used for clinical decision-making, diagnosis, treatment, or medication dosing.
-
-## Status
-
-Built as a front-end healthcare workflow prototype. Future work includes a secure backend, authentication, encrypted data storage, audit logging, validated clinical decision support, test coverage and accessibility review.
-
-## Copyright
-
-© 2026 Farah Bi. All rights reserved.
-
+The Render free service can sleep while idle. The frontend loads synthetic portfolio data immediately and shows the backend wake status without blocking the demo.

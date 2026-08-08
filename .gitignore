@@ -1,4 +1,5 @@
 node_modules/
+.npm-cache/
 .venv/
 build/
 dist/
@@ -7,5 +8,7 @@ coverage/
 *.log
 __pycache__/
 *.py[cod]
+*.db
+database.db
 .env*
 !.env.example
