@@ -1034,7 +1034,7 @@ function AuthenticatedWorkspace() {
                     }`}
                   >
                     <div>
-                      <span className="text-slate-500 block uppercase text-[8px] font-bold">Patient Name (নাম)</span>
+                      <span className="text-slate-500 block uppercase text-[8px] font-bold">Patient Name</span>
                       <strong className="text-slate-900 text-[11px] leading-tight font-sans">{currentPatient.name}</strong>
                     </div>
                     <div>
@@ -1042,7 +1042,7 @@ function AuthenticatedWorkspace() {
                       <strong className="text-slate-900 text-[11px] font-sans">{currentPatient.age} Yrs / {currentPatient.sex}</strong>
                     </div>
                     <div>
-                      <span className="text-slate-500 block uppercase text-[8px] font-bold">Date (তারিখ)</span>
+                      <span className="text-slate-500 block uppercase text-[8px] font-bold">Date</span>
                       <strong className="text-slate-900 text-[11px] font-sans">{currentPatient.date}</strong>
                     </div>
                     <div>
@@ -1065,7 +1065,7 @@ function AuthenticatedWorkspace() {
                             padColorTheme === 'teal' ? 'text-teal-850' :
                             padColorTheme === 'amber' ? 'text-amber-850' :
                             padColorTheme === 'rose' ? 'text-rose-850' : 'text-indigo-850'
-                          }`}>C/C (উপসর্গ):</span>
+                          }`}>C/C (Chief Complaints):</span>
                           <p className="whitespace-pre-line text-slate-600 leading-relaxed font-sans mt-0.5">{currentPatient.cc}</p>
                         </div>
                       )}
@@ -1077,7 +1077,7 @@ function AuthenticatedWorkspace() {
                           padColorTheme === 'teal' ? 'text-teal-850' :
                           padColorTheme === 'amber' ? 'text-amber-850' :
                           padColorTheme === 'rose' ? 'text-rose-850' : 'text-indigo-850'
-                        }`}>O/E (পরীক্ষা):</span>
+                        }`}>O/E (Examination):</span>
                         <ul className="space-y-1 mt-1 text-slate-600 font-sans">
                           {currentPatient.bp && <li>• BP: <strong className="text-slate-800">{currentPatient.bp}</strong></li>}
                           {currentPatient.pulse && <li>• Pulse: <strong className="text-slate-800">{currentPatient.pulse}/Min</strong></li>}
@@ -1094,7 +1094,7 @@ function AuthenticatedWorkspace() {
                             padColorTheme === 'teal' ? 'text-teal-850' :
                             padColorTheme === 'amber' ? 'text-amber-850' :
                             padColorTheme === 'rose' ? 'text-rose-850' : 'text-indigo-850'
-                          }`}>Ix (পরীক্ষা):</span>
+                          }`}>Ix (Investigations):</span>
                           <p className="whitespace-pre-line text-slate-600 leading-relaxed font-sans mt-0.5">{currentPatient.ix}</p>
                         </div>
                       )}
@@ -1107,7 +1107,7 @@ function AuthenticatedWorkspace() {
                           padColorTheme === 'amber' ? 'bg-amber-50/50 border-amber-150' :
                           padColorTheme === 'rose' ? 'bg-rose-50/50 border-rose-150' : 'bg-indigo-50/50 border-indigo-150'
                         }`}>
-                          <span className="font-bold font-sans text-slate-500 block text-[9px] uppercase">Dx (রোগ নির্নয়):</span>
+                          <span className="font-bold font-sans text-slate-500 block text-[9px] uppercase">Dx (Diagnosis):</span>
                           <p className="text-slate-900 font-sans font-bold text-[11px] leading-tight">{currentPatient.dx}</p>
                         </div>
                       )}
@@ -1144,14 +1144,14 @@ function AuthenticatedWorkspace() {
                                 <div className="flex flex-wrap items-center gap-1.5">
                                   <span className="font-extrabold text-slate-900">{i + 1}. {rd.brandName}</span>
                                   {rd.beforeFood && (
-                                    <span className="text-[9px] bg-red-100 text-red-800 px-1.5 py-0.2 rounded font-sans font-medium">খাওয়ার পূর্বে</span>
+                                    <span className="text-[9px] bg-red-100 text-red-800 px-1.5 py-0.2 rounded font-sans font-medium">Before food</span>
                                   )}
                                   {rd.afterFood && (
-                                    <span className="text-[9px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded font-sans font-medium">খাওয়ার পরে</span>
+                                    <span className="text-[9px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded font-sans font-medium">After food</span>
                                   )}
                                 </div>
                                 <div className="text-slate-600 font-medium">
-                                  Dose (মাত্রা): <strong className="text-slate-900 font-bold">{rd.dose}</strong> — {rd.duration} {rd.durationUnit}
+                                  Dose: <strong className="text-slate-900 font-bold">{rd.dose}</strong> — {rd.duration} {rd.durationUnit}
                                 </div>
                               </div>
                               <button 
@@ -1186,7 +1186,11 @@ function AuthenticatedWorkspace() {
                     }`}
                   >
                     <div>
-                      <p className="font-medium text-slate-700">{headerSettings.footerText}</p>
+                      <p className="font-medium text-slate-700">
+                        {headerSettings.footerText === 'নিয়ম মাফিক ঔষধ খাইবেন। ডাক্তারের পরামর্শ ব্যতীত ঔষধ পরিবর্তন নিষেধ।'
+                          ? "Take medicines exactly as directed. Do not change any medicine without your doctor's advice."
+                          : headerSettings.footerText}
+                      </p>
                       <p className="font-sans text-[8px] mt-0.5 text-slate-400">Software generated prescription. Powered by Prescription Writer BD client.</p>
                     </div>
                     {headerSettings.displayBarcode && (
@@ -1856,7 +1860,7 @@ function AuthenticatedWorkspace() {
                   }`}
                 >
                   <div>
-                    <span className="text-slate-500 block uppercase text-[8px] font-bold">Patient Name (নাম)</span>
+                    <span className="text-slate-500 block uppercase text-[8px] font-bold">Patient Name</span>
                     <strong className="text-slate-950 text-[11px] leading-tight font-sans">{currentPatient.name}</strong>
                   </div>
                   <div>
@@ -1864,7 +1868,7 @@ function AuthenticatedWorkspace() {
                     <strong className="text-slate-950 text-[11px] font-sans">{currentPatient.age} Yrs / {currentPatient.sex}</strong>
                   </div>
                   <div>
-                    <span className="text-slate-500 block uppercase text-[8px] font-bold">Date (তারিখ)</span>
+                    <span className="text-slate-500 block uppercase text-[8px] font-bold">Date</span>
                     <strong className="text-slate-950 text-[11px] font-sans">{currentPatient.date}</strong>
                   </div>
                   <div>
@@ -1886,7 +1890,7 @@ function AuthenticatedWorkspace() {
                           padColorTheme === 'teal' ? 'text-teal-850' :
                           padColorTheme === 'amber' ? 'text-amber-850' :
                           padColorTheme === 'rose' ? 'text-rose-850' : 'text-indigo-850'
-                        }`}>C/C (উপসর্গ):</span>
+                        }`}>C/C (Chief Complaints):</span>
                         <p className="whitespace-pre-line text-slate-600 leading-relaxed font-sans mt-0.5">{currentPatient.cc}</p>
                       </div>
                     )}
@@ -1897,7 +1901,7 @@ function AuthenticatedWorkspace() {
                         padColorTheme === 'teal' ? 'text-teal-850' :
                         padColorTheme === 'amber' ? 'text-amber-850' :
                         padColorTheme === 'rose' ? 'text-rose-850' : 'text-indigo-850'
-                      }`}>O/E (শারীরিক পরীক্ষা):</span>
+                      }`}>O/E (Examination):</span>
                       <ul className="space-y-1 mt-1 text-slate-600 font-sans">
                         {currentPatient.bp && <li>• BP: <strong className="text-slate-800">{currentPatient.bp}</strong></li>}
                         {currentPatient.pulse && <li>• Pulse: <strong className="text-slate-800">{currentPatient.pulse}/Min</strong></li>}
@@ -1912,7 +1916,7 @@ function AuthenticatedWorkspace() {
                           padColorTheme === 'teal' ? 'text-teal-850' :
                           padColorTheme === 'amber' ? 'text-amber-850' :
                           padColorTheme === 'rose' ? 'text-rose-850' : 'text-indigo-850'
-                        }`}>Ix (পরীক্ষা সমূহ):</span>
+                        }`}>Ix (Investigations):</span>
                         <p className="whitespace-pre-line text-slate-600 leading-relaxed font-sans mt-0.5">{currentPatient.ix}</p>
                       </div>
                     )}
@@ -1924,7 +1928,7 @@ function AuthenticatedWorkspace() {
                         padColorTheme === 'amber' ? 'bg-amber-50/50 border-amber-150' :
                         padColorTheme === 'rose' ? 'bg-rose-50/50 border-rose-150' : 'bg-indigo-50/50 border-indigo-150'
                       }`}>
-                        <span className="font-bold font-sans text-slate-500 block text-[9px] uppercase">Dx (রোগ নির্নয়):</span>
+                        <span className="font-bold font-sans text-slate-500 block text-[9px] uppercase">Dx (Diagnosis):</span>
                         <p className="text-slate-900 font-sans font-bold text-[11px] leading-tight">{currentPatient.dx}</p>
                       </div>
                     )}
@@ -1952,14 +1956,14 @@ function AuthenticatedWorkspace() {
                             <div className="flex flex-wrap items-center gap-1.5">
                               <span className="font-extrabold text-slate-900">{i + 1}. {rd.brandName}</span>
                               {rd.beforeFood && (
-                                <span className="text-[9px] bg-red-105 text-red-800 px-1.5 py-0.2 rounded font-sans font-medium">খাওয়ার পূর্বে</span>
+                                <span className="text-[9px] bg-red-105 text-red-800 px-1.5 py-0.2 rounded font-sans font-medium">Before food</span>
                               )}
                               {rd.afterFood && (
-                                <span className="text-[9px] bg-emerald-105 text-emerald-800 px-1.5 py-0.2 rounded font-sans font-medium">খাওয়ার পরে</span>
+                                <span className="text-[9px] bg-emerald-105 text-emerald-800 px-1.5 py-0.2 rounded font-sans font-medium">After food</span>
                               )}
                             </div>
                             <div className="text-slate-600 font-medium">
-                              Dose (মাত্রা): <strong className="text-slate-900 font-bold">{rd.dose}</strong> — {rd.duration} {rd.durationUnit}
+                              Dose: <strong className="text-slate-900 font-bold">{rd.dose}</strong> — {rd.duration} {rd.durationUnit}
                             </div>
                           </div>
                         </li>
@@ -1985,7 +1989,11 @@ function AuthenticatedWorkspace() {
                   }`}
                 >
                   <div>
-                    <p className="font-medium text-slate-705">{headerSettings.footerText}</p>
+                    <p className="font-medium text-slate-705">
+                      {headerSettings.footerText === 'নিয়ম মাফিক ঔষধ খাইবেন। ডাক্তারের পরামর্শ ব্যতীত ঔষধ পরিবর্তন নিষেধ।'
+                        ? "Take medicines exactly as directed. Do not change any medicine without your doctor's advice."
+                        : headerSettings.footerText}
+                    </p>
                     <p className="font-sans text-[8px] mt-0.5 text-slate-400">Software generated prescription. Powered by Prescription Writer BD client.</p>
                   </div>
                   {headerSettings.displayBarcode && (
