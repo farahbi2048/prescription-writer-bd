@@ -111,7 +111,7 @@ The API documentation is then available at `http://localhost:8000/docs`. The cur
 
 ## AI Scribe local integration
 
-The optional AI Scribe workflow adds audio-to-SOAP documentation drafting and an informational OpenFDA label lookup. It uses a separate Python API and is intended for local development only.
+The optional AI Scribe workflow is designed for audio-to-SOAP documentation drafting and an informational OpenFDA label lookup. The React review interface is present, but the `/api/visit-audio` route from the earlier prototype has not yet been migrated into the current authenticated FastAPI router structure.
 
 ```text
 React app (port 3000) -> FastAPI AI Scribe API (port 8000) -> Gemini / OpenFDA
@@ -133,14 +133,20 @@ Start the React application in a second terminal from the repository root:
 npm run dev
 ```
 
-Open the **AI Scribe** tab, upload a non-identifiable demo MP3/WAV, edit the extracted draft, and explicitly apply it to the active patient. The AI Scribe API is not deployed by the included GitHub Pages workflow; hosting it publicly requires a secured backend, authentication, encrypted storage, access controls, audit logging, and a privacy/security review.
+After the AI route is restored, open **Saved Patients & History**, load the intended patient, then open **AI Scribe**. Upload a non-identifiable demo MP3/WAV, review and edit every extracted field, and select **Apply reviewed draft & open prescription**. The reviewed fields are copied to the current patient in memory and the Prescription Pad opens; the clinician must still review and save the visit. The AI Scribe API is not deployed by the included GitHub Pages workflow.
+
+The local medicine brand list is demonstration data for informational search only. It does not provide medical advice or prescribing recommendations. Product, indication and manufacturer details must be checked against current authoritative sources before use.
 
 ## Data, privacy and clinical-safety notice
 
-This project is a student portfolio prototype, not a production clinical information system. It has no authentication, server-side database, encryption, audit trail, role-based access control, regulatory review, or clinical validation. Data is stored only in the current browser's `localStorage` and may be removed when browser storage is cleared. Never enter real patient-identifiable or clinical data into this prototype.
+This project is a student portfolio prototype, not a production clinical information system. All preloaded patient, appointment, payment and clinician records are fictional demonstration data. Any resemblance to real people or organizations is coincidental. Never enter real patient-identifiable or clinical data into this prototype.
+
+The current branch includes JWT authentication, SQLite/SQLAlchemy models, doctor-scoped patient endpoints and partial audit logging for patient mutations. Most prescription-workspace, appointment and payment data still remains in browser `localStorage`; the frontend is not yet synchronized with the backend database. Encryption at rest, comprehensive role-based authorization, complete audit coverage, automated testing, clinical validation and regulatory/privacy review are not implemented.
+
+The production plan requires migration to managed PostgreSQL, stronger role-based access, encryption in transit and at rest, comprehensive audit logging, automated testing, backups, monitoring and applicable clinical, privacy and regulatory review.
 
 The calculator outputs and prescription-related content are demonstration features only and must not be used for clinical decision-making, diagnosis, treatment, or medication dosing.
 
 ## Status
 
-Built as a front-end healthcare workflow prototype. Future work includes a secure backend, authentication, encrypted data storage, audit logging, validated clinical decision support, test coverage and accessibility review.
+The project now has a frontend workflow plus an authentication and patient-API foundation. Next work includes connecting frontend records to the backend, restoring the protected AI Scribe route, adding prescription and AI-session APIs, introducing Alembic migrations, moving to PostgreSQL, and completing security, testing and accessibility work.

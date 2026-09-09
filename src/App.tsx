@@ -41,9 +41,15 @@ import AuthGateway from './components/AuthGateway';
 import { useAuth } from './context/AuthContext';
 
 export default function App() {
-  const { user, loading, logout } = useAuth();
+  const { user, loading } = useAuth();
   if (loading) return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white font-semibold">Loading secure workspace…</div>;
   if (!user) return <AuthGateway />;
+  return <AuthenticatedWorkspace />;
+}
+
+function AuthenticatedWorkspace() {
+  const { user: authenticatedUser, logout } = useAuth();
+  const user = authenticatedUser!;
   // ---- Persisted or Live States ----
   const [patients, setPatients] = useState<Patient[]>(() => {
     const local = localStorage.getItem('bd_prescription_patients');
@@ -158,16 +164,21 @@ export default function App() {
     setCurrentPatient(prev => ({ ...prev, ...updated }));
   };
 
+  const handleApplyAiScribeDraft = (updated: Partial<Patient>) => {
+    setCurrentPatient(prev => ({ ...prev, ...updated }));
+    setActiveTab('PrescriptionPad');
+  };
+
   // ---- Add New Patient Initializing Empty State ----
   const handleCreateEmptyPatient = () => {
     const newReg = Math.floor(100000 + Math.random() * 900000).toString();
     const fresh: Patient = {
       id: `pat-${Date.now()}`,
-      name: 'New Registered Patient',
+      name: 'New Demo Patient',
       age: '30',
       sex: 'M',
       address: 'Dhaka',
-      mobile: '01700000000',
+      mobile: '00000000000',
       regNo: newReg,
       date: new Date().toISOString().split('T')[0],
       dx: '',
@@ -482,6 +493,9 @@ export default function App() {
 
       {/* 2. MAIN HUB WORKSPACE AREA */}
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-6">
+        <div className="mb-5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">
+          <strong>Portfolio demonstration:</strong> All preloaded patient, appointment, payment and clinician records are fictional. Do not enter real patient-identifiable information. AI output is a draft and requires clinician review before use.
+        </div>
         
         {/* TAB 1: INTERACTIVE PRESCRIPTION EDITOR */}
         {activeTab === 'PrescriptionPad' && (
@@ -1266,7 +1280,7 @@ export default function App() {
             <div className="flex flex-wrap justify-between items-center gap-4 border-b border-slate-800 pb-3">
               <div>
                 <h2 className="text-xl font-bold">Bangladeshi Pharma Brand Index</h2>
-                <p className="text-xs text-slate-400">DGDA Registered Drugs loaded locally for immediate offline search</p>
+                <p className="text-xs text-slate-400">Local demonstration data for informational search</p>
               </div>
 
               {/* Directory Filter Input */}
@@ -1280,6 +1294,10 @@ export default function App() {
                 />
                 <Search className="w-4 h-4 text-slate-500 absolute left-2.5 top-2.5" />
               </div>
+            </div>
+
+            <div className="rounded-lg border border-amber-800/60 bg-amber-950/40 p-3 text-xs text-amber-200">
+              <strong>Informational demonstration only.</strong> Verify every product, indication and manufacturer against current authoritative sources before clinical use. This index does not provide medical advice or prescribing recommendations.
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1529,8 +1547,8 @@ export default function App() {
           <div className="bg-slate-900 border border-slate-850 p-6 rounded-xl space-y-5" id="view-sms-router-tab">
             <div className="border-b border-slate-800 pb-3 flex justify-between items-center">
               <div>
-                <h2 className="text-xl font-bold">GP / Robi Integration Alert Router</h2>
-                <p className="text-xs text-slate-400">Transmit medication schedules and dosage reminders to patient handsets</p>
+                <h2 className="text-xl font-bold">SMS Reminder Simulator</h2>
+                <p className="text-xs text-slate-400">UI demonstration only — no message is sent to any handset</p>
               </div>
               <div className="p-3 bg-slate-950 rounded border border-slate-800 text-right">
                 <span className="text-[10px] text-slate-400 block font-mono">Core SMS Credits Left:</span>
@@ -1546,7 +1564,7 @@ export default function App() {
                     <label className="block text-slate-400 mb-1">Mobile Carrier Prefix</label>
                     <input 
                       type="text" 
-                      placeholder="e.g. 01700000000" 
+                      placeholder="e.g. 00000000000"
                       value={smsMobile}
                       onChange={(e) => setSmsMobile(e.target.value)}
                       className="w-full bg-slate-950 border border-slate-800 p-2 rounded tracking-wider font-mono"
@@ -1556,7 +1574,7 @@ export default function App() {
                     <label className="block text-slate-400 mb-1">Alert Reminders Content</label>
                     <textarea 
                       rows={4}
-                      placeholder="e.g. Dr. Musafir chamber alert: Dear Mr. Muhammad, please consume Napa Extend dose at breakfast as scheduled. Fasting blood test advised tomorrow."
+                      placeholder="Demo reminder text — no real patient information"
                       value={smsMessage}
                       onChange={(e) => setSmsMessage(e.target.value)}
                       className="w-full bg-slate-950 border border-slate-800 p-2 rounded text-[11px]"
@@ -1580,7 +1598,7 @@ export default function App() {
                   {smsOutcome === 'success' && (
                     <div className="bg-emerald-950 text-emerald-400 border border-emerald-900 p-3 rounded flex items-center gap-2">
                       <Check className="w-4 h-4" />
-                      <span>Remote SMS Modem transmitted packet Successfully! Carrier payload delivered.</span>
+                      <span>Simulation complete. No SMS or carrier payload was sent.</span>
                     </div>
                   )}
                 </div>
@@ -1590,25 +1608,25 @@ export default function App() {
               <div className="bg-slate-950 p-5 rounded-lg border border-slate-850 space-y-4">
                 <h4 className="font-bold text-white text-sm border-b border-slate-850 pb-2 flex items-center">
                   <Coins className="w-4 h-4 mr-1.5 text-pink-500" />
-                  bKash / Nagad Instant Credit Recharge
+                  Simulated bKash / Nagad Credit Recharge
                 </h4>
                 <div className="text-slate-400 leading-relaxed text-[11px] space-y-2">
                   <p>
                     Recharge SMS pools to automate reminders for pregnant EDD mothers and high glycemic index insulin targets.
                   </p>
                   <div className="grid grid-cols-3 gap-2 py-2">
-                    <button onClick={() => { setSmsBalance(b => b + 1000); alert("Recharged 1,000 credits via bKash gateway!"); }} className="bg-pink-700 hover:bg-pink-800 text-white font-bold py-2 rounded">
+                    <button onClick={() => { setSmsBalance(b => b + 1000); alert("Added 1,000 simulated SMS credits."); }} className="bg-pink-700 hover:bg-pink-800 text-white font-bold py-2 rounded">
                       ৳৩০০ / 1,000 SMS
                     </button>
-                    <button onClick={() => { setSmsBalance(b => b + 5000); alert("Recharged 5,000 credits via bKash gateway!"); }} className="bg-pink-700 hover:bg-pink-800 text-white font-bold py-2 rounded">
+                    <button onClick={() => { setSmsBalance(b => b + 5000); alert("Added 5,000 simulated SMS credits."); }} className="bg-pink-700 hover:bg-pink-800 text-white font-bold py-2 rounded">
                       ৳১,২৫০ / 5,000 SMS
                     </button>
-                    <button onClick={() => { setSmsBalance(b => b + 15000); alert("Recharged 15,000 credits via bKash gateway!"); }} className="bg-pink-700 hover:bg-pink-800 text-white font-bold py-2 rounded">
+                    <button onClick={() => { setSmsBalance(b => b + 15000); alert("Added 15,000 simulated SMS credits."); }} className="bg-pink-700 hover:bg-pink-800 text-white font-bold py-2 rounded">
                       ৳৩,০০০ / 15,000 SMS
                     </button>
                   </div>
                   <p className="font-mono text-[9px] text-[#E5B620]">
-                    * Instant API keys binding under Zilsoft SMS Router integration standard.
+                    * Prototype state only. No carrier, bKash, Nagad or payment API is connected.
                   </p>
                 </div>
               </div>
@@ -1731,7 +1749,7 @@ export default function App() {
         {activeTab === 'AiScribe' && (
           <AiScribe
             patient={currentPatient}
-            onApplyReviewedDraft={handleUpdatePatient}
+            onApplyReviewedDraft={handleApplyAiScribeDraft}
           />
         )}
 
@@ -2017,7 +2035,10 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 space-y-1">
           <p>© 2026 Prescription Writer BD. All Rights Reserved. Fully localized for the healthcare professionals of Bangladesh.</p>
           <p className="font-mono text-[10px] text-slate-600">
-            Offline Enabled Workspace • Database Synchronizer Ready • bKash SMS Gateway v1.0.1
+            Local Demo Mode • Database Integration in Progress • SMS Gateway Simulated
+          </p>
+          <p className="text-[10px] text-slate-600">
+            Production requires PostgreSQL, stronger access controls, encryption, comprehensive audit logging, automated testing and applicable privacy, clinical and regulatory review.
           </p>
         </div>
       </footer>

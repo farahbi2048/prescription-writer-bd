@@ -1,5 +1,7 @@
 import { DrugItem, Patient, Appointment, PaymentRecord, HeaderSettings, PageSetupSettings } from './types';
 
+// All preloaded people, contact details and clinical records below are fictional demo data.
+
 export const INITIAL_DRUGS: DrugItem[] = [
   { brand: "Napa Extend 665mg", generic: "Paracetamol", indication: "Fever, Osteoarthritis, Backache", drugClass: "Analgesics", company: "Beximco Pharmaceuticals Ltd." },
   { brand: "Napa Rapid 500mg", generic: "Paracetamol", indication: "Mild to moderate pain, fever", drugClass: "Analgesics", company: "Beximco Pharmaceuticals Ltd." },
@@ -82,11 +84,11 @@ export const INITIAL_DRUGS: DrugItem[] = [
 export const INITIAL_PATIENTS: Patient[] = [
   {
     id: "pat-1",
-    name: "Musafir Muhammad",
+    name: "Demo Patient Alpha",
     age: "32",
     sex: "M",
-    address: "Gaibandha, Rangpur",
-    mobile: "01700000000",
+    address: "Demo District, Bangladesh",
+    mobile: "00000000001",
     regNo: "112589",
     date: "2026-05-19",
     dx: "Essential Hypertension & Acid Peptic Disease",
@@ -146,11 +148,11 @@ export const INITIAL_PATIENTS: Patient[] = [
   },
   {
     id: "pat-2",
-    name: "Rabeya Begum",
+    name: "Demo Patient Beta",
     age: "45",
     sex: "F",
-    address: "Panthapath, Dhaka",
-    mobile: "01617180711",
+    address: "Demo City, Bangladesh",
+    mobile: "00000000002",
     regNo: "145162",
     date: "2026-05-18",
     dx: "Type 2 Diabetes Mellitus & Obesity",
@@ -210,26 +212,26 @@ export const INITIAL_PATIENTS: Patient[] = [
 ];
 
 export const INITIAL_APPOINTMENTS: Appointment[] = [
-  { id: "ap-1", date: "2026-05-20", status: "Pending", serial: 1, regNo: "145162", apntNo: "APN-902", name: "Rabeya Begum", age: "45", sex: "F", mobile: "01617180711", address: "Dhaka", paid: "300" },
-  { id: "ap-2", date: "2026-05-20", status: "Completed", serial: 2, regNo: "112589", apntNo: "APN-903", name: "Musafir Muhammad", age: "32", sex: "M", mobile: "01700000000", address: "Gaibandha", paid: "300" },
-  { id: "ap-3", date: "2026-05-21", status: "Pending", serial: 3, regNo: "115201", apntNo: "APN-904", name: "Anisur Rahman", age: "50", sex: "M", mobile: "01815667788", address: "Rangpur", paid: "300" }
+  { id: "ap-1", date: "2026-05-20", status: "Pending", serial: 1, regNo: "145162", apntNo: "APN-902", name: "Demo Patient Beta", age: "45", sex: "F", mobile: "00000000002", address: "Demo City", paid: "300" },
+  { id: "ap-2", date: "2026-05-20", status: "Completed", serial: 2, regNo: "112589", apntNo: "APN-903", name: "Demo Patient Alpha", age: "32", sex: "M", mobile: "00000000001", address: "Demo District", paid: "300" },
+  { id: "ap-3", date: "2026-05-21", status: "Pending", serial: 3, regNo: "115201", apntNo: "APN-904", name: "Demo Patient Gamma", age: "50", sex: "M", mobile: "00000000003", address: "Demo Region", paid: "300" }
 ];
 
 export const INITIAL_PAYMENTS: PaymentRecord[] = [
-  { id: "pay-1", date: "2026-05-19", regNo: "112589", name: "Musafir Muhammad", address: "Gaibandha, Rangpur", mobile: "01700000000", amount: "300" },
-  { id: "pay-2", date: "2026-05-18", regNo: "145162", name: "Rabeya Begum", address: "Panthapath, Dhaka", mobile: "01617180711", amount: "300" }
+  { id: "pay-1", date: "2026-05-19", regNo: "112589", name: "Demo Patient Alpha", address: "Demo District, Bangladesh", mobile: "00000000001", amount: "300" },
+  { id: "pay-2", date: "2026-05-18", regNo: "145162", name: "Demo Patient Beta", address: "Demo City, Bangladesh", mobile: "00000000002", amount: "300" }
 ];
 
 export const INITIAL_HEADER_SETTINGS: HeaderSettings = {
-  doctorName: "Dr. Musafir Muhammad",
-  degrees: "MBBS (Rangpur Medical College), MD (Cardiology)",
-  specialty: "Medicine Specialist & Cardiologist",
-  department: "Department of Medicine",
-  medicalCollege: "Rangpur Medical College & Hospital",
-  bmdcReg: "BMDC Reg. No- 112589",
-  clinicName: "Crescent Diagnostic Center & Chamber",
-  clinicAddress: "Panthapath, Dhaka-1205",
-  clinicMobile: "+8801700000000",
+  doctorName: "Dr. Demo Clinician",
+  degrees: "Demonstration credentials only",
+  specialty: "Portfolio Demo Workspace",
+  department: "Fictional Department",
+  medicalCollege: "Fictional Teaching Hospital",
+  bmdcReg: "DEMO REG-000000",
+  clinicName: "Demo Clinical Training Centre",
+  clinicAddress: "Demo City, Bangladesh",
+  clinicMobile: "00000000000",
   visitTime: "Visit Time: 4PM - 10PM",
   offDay: "Friday Off",
   backgroundColor: "#E9E9E9",
