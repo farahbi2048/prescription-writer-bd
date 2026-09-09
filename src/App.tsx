@@ -346,7 +346,7 @@ export default function App() {
             </div>
             <div>
               <span className="text-[10px] font-mono tracking-widest text-[#0066cc] font-bold uppercase block">
-                Zilsoft Pro Simulator [BD v2.8]
+                Clinical Workspace
               </span>
               <h1 className="text-base font-extrabold text-slate-900 leading-none font-sans">
                 Prescription Writer BD
