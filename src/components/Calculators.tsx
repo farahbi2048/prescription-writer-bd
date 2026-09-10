@@ -10,7 +10,7 @@ interface CalculatorsProps {
 export default function Calculators({ patient, onUpdatePatient }: CalculatorsProps) {
   const [activeCalcTab, setActiveCalcTab] = useState<'BMI' | 'Insulin' | 'Z-Score' | 'BMR' | 'EDD'>('BMI');
 
-  // Trigger calculations whenever relevant fields change
+  // Recalculate the active calculator when its inputs change.
   useEffect(() => {
     if (activeCalcTab === 'BMI') {
       const weight = parseFloat(patient.bmiWeight);
@@ -28,7 +28,7 @@ export default function Calculators({ patient, onUpdatePatient }: CalculatorsPro
         else if (bmi >= 25 && bmi < 30) classification = 'Overweight';
         else classification = 'Obese';
 
-        // Devine Ideal Weight Formula
+        // Convert the BMI bounds 18.5 and 24.9 into a weight range for this height.
         let idealMin = 18.5 * (meters * meters);
         let idealMax = 24.9 * (meters * meters);
         const idealWeightString = `${idealMin.toFixed(0)} - ${idealMax.toFixed(0)} kg`;
@@ -52,7 +52,7 @@ export default function Calculators({ patient, onUpdatePatient }: CalculatorsPro
         let doseString = '';
         
         if (patient.insulinTime === 'BD') {
-          // 2/3 morning, 1/3 night
+          // The BD demo schedule splits the total into two thirds and one third.
           const morning = Math.round((totalUnit * 2) / 3);
           const night = Math.round(totalUnit / 3);
           doseString = `${morning}-0-${night} Units (Before Food)`;
@@ -82,7 +82,7 @@ export default function Calculators({ patient, onUpdatePatient }: CalculatorsPro
       
       if (!isNaN(weight) && !isNaN(feet) && !isNaN(age)) {
         const heightCm = (((feet * 12) + (isNaN(inch) ? 0 : inch)) * 2.54);
-        // Mifflin-St Jeor
+        // Mifflin-St Jeor equation, followed by the selected activity multiplier.
         let bmr = (10 * weight) + (6.25 * heightCm) - (5 * age);
         if (patient.bmrGender === 'M') {
           bmr += 5;
@@ -108,10 +108,10 @@ export default function Calculators({ patient, onUpdatePatient }: CalculatorsPro
     if (activeCalcTab === 'EDD' && patient.eddLmp) {
       const lmpDate = new Date(patient.eddLmp);
       if (!isNaN(lmpDate.getTime())) {
-        // Naegele's rule: LMP + 280 Days
+        // Estimate the delivery date as 280 days after LMP.
         const eddDate = new Date(lmpDate.getTime() + (280 * 24 * 60 * 60 * 1000));
         
-        // Gestational age from fixed current local date (2026-05-19)
+        // Uses a fixed demo date rather than today's date.
         const currentDate = new Date('2026-05-19');
         const diffTime = Math.abs(currentDate.getTime() - lmpDate.getTime());
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -135,11 +135,11 @@ export default function Calculators({ patient, onUpdatePatient }: CalculatorsPro
         const diffTime = Math.abs(currentDate.getTime() - dobDate.getTime());
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         
-        // Let's do a simplified pediatric growth standard score
+        // Placeholder weight bands; this does not calculate a WHO growth Z-score.
         let result = 'Perfect';
         const weightValue = parseFloat(patient.zWeight);
         if (!isNaN(weightValue)) {
-          // If 5 years or younger
+          // Use the under-five demo band below 1,825 days.
           if (diffDays < 1825) {
             if (weightValue < 5) result = 'Severely Underweight (Critical Risk)';
             else if (weightValue >= 5 && weightValue < 12) result = 'Normal Percentile range';
@@ -159,7 +159,6 @@ export default function Calculators({ patient, onUpdatePatient }: CalculatorsPro
 
   return (
     <div className="bg-[#CFDDF0] p-4 rounded-lg shadow-sm border border-blue-400 mt-4" id="clinical-calculator-widget">
-      {/* Upper Selector Tabs */}
       <div className="flex flex-wrap gap-1 mb-3">
         {(['BMI', 'Insulin', 'Z-Score', 'BMR', 'EDD'] as const).map((tab) => (
           <button
@@ -182,10 +181,8 @@ export default function Calculators({ patient, onUpdatePatient }: CalculatorsPro
         ))}
       </div>
 
-      {/* Calculator Form Panels */}
       <div className="bg-blue-50/50 p-3 rounded border border-blue-200 text-xs text-slate-800">
         
-        {/* BMI FORM */}
         {activeCalcTab === 'BMI' && (
           <div className="space-y-3" id="calc-pane-bmi">
             <div className="grid grid-cols-3 gap-2">
@@ -242,7 +239,6 @@ export default function Calculators({ patient, onUpdatePatient }: CalculatorsPro
           </div>
         )}
 
-        {/* INSULIN DOSAGE COMPILER */}
         {activeCalcTab === 'Insulin' && (
           <div className="space-y-3" id="calc-pane-insulin">
             <div className="grid grid-cols-3 gap-2">
@@ -298,7 +294,6 @@ export default function Calculators({ patient, onUpdatePatient }: CalculatorsPro
           </div>
         )}
 
-        {/* Z-SCORE FOR PEDIATRIC COHORTS */}
         {activeCalcTab === 'Z-Score' && (
           <div className="space-y-3" id="calc-pane-zscore">
             <div className="grid grid-cols-3 gap-2">
@@ -352,7 +347,6 @@ export default function Calculators({ patient, onUpdatePatient }: CalculatorsPro
           </div>
         )}
 
-        {/* BMR (METABOLIC RATE CALCULATOR) */}
         {activeCalcTab === 'BMR' && (
           <div className="space-y-3" id="calc-pane-bmr">
             <div className="grid grid-cols-4 gap-2">
@@ -434,7 +428,6 @@ export default function Calculators({ patient, onUpdatePatient }: CalculatorsPro
           </div>
         )}
 
-        {/* EDD (EXPECTED DATE OF DELIVERY) & GESTATIONAL AGE */}
         {activeCalcTab === 'EDD' && (
           <div className="space-y-3" id="calc-pane-edd">
             <div>

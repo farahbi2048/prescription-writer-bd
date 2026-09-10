@@ -7,19 +7,19 @@
   --font-serif: "Playfair Display", Georgia, serif;
 }
 
-/* Enable beautiful print layouts with custom colors */
+/* Print the prescription sheet without the surrounding workspace. */
 @media print {
-  /* Hide all background layouts, navigation rails, sliders, headers and modal container boxes */
+  /* Keep ancestor boxes in the layout so the prescription remains reachable. */
   body * {
     visibility: hidden;
   }
   
-  /* Show only the designated prescription sheet and its descendant children */
+  /* Restore visibility for the sheet and its contents. */
   .printable-pad-content, .printable-pad-content * {
     visibility: visible !important;
   }
   
-  /* Reset layout position to fill the full physical print document */
+  /* Remove the preview border and use sheet padding for the printed margins. */
   .printable-pad-content {
     position: absolute !important;
     left: 0 !important;
@@ -33,7 +33,7 @@
     background: white !important;
   }
 
-  /* Force browsers to render background colors and styling assets on paper */
+  /* Request the selected colours; printer settings may still override them. */
   body {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
@@ -41,7 +41,7 @@
     color: black !important;
   }
 
-  /* Ensure page margins are compact for single sheet standard A4 output */
+  /* A4 output; .printable-pad-content supplies the inner margin. */
   @page {
     size: A4;
     margin: 0 !important;

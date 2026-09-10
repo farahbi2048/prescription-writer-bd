@@ -18,27 +18,24 @@ export default function PageLayoutSimulator({ settings, onChangeSettings, onRese
     onChangeSettings({ [section]: updatedSection });
   };
 
-  // Convert cm to proportional visual px values (A4 typically is 21cm x 29.7cm)
-  // We can use a scale factor: 1 cm = 8.5 pixels for screen representation
+  // Preview scale: 8.5 screen pixels per centimetre, not a physical print conversion.
   const scale = 8.5;
 
   return (
     <div className="bg-slate-50 p-6 rounded-xl border border-slate-200" id="page-layout-setup-panel">
       
-      {/* Description Headers */}
       <div className="bg-[#DFECC1] text-emerald-900 border border-emerald-300 p-4 rounded-lg mb-6 text-xs leading-relaxed shadow-xs">
         <strong>আপনার ছাপানো প্যাড থাকলে এখানে সেই প্যাডের সাইজ ইনপুট দিন।</strong> প্রেসক্রিপশন লেখার সময় "Print Without Header" বাটন চেপে এখানকার সাইজ অনুসারে আপনার প্যাডেই প্রেসক্রিপশন প্রিন্ট করতে পারবেন। একটি স্কেল দিয়ে আপনার ছাপানো প্যাড সেন্টিমিটারে মাপুন। নিচে প্রেসক্রিপশনের মোট ৬টি অংশ আছে। আপনার প্রেসক্রিপশনের মাপ মিলিয়ে অংশগুলো পূরণ করুন।
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        {/* Dynamic Interactive Preview Blueprint */}
+        {/* Scaled page preview */}
         <div className="lg:col-span-5 flex flex-col items-center">
           <span className="text-xs font-mono font-bold text-slate-500 mb-2 uppercase tracking-wide">
             Live Padding & Boundary Blueprint
           </span>
           
-          {/* Visual Container representing A4 physical margins */}
           <div 
             className="border-2 border-red-500 bg-white relative shadow-md rounded overflow-hidden flex flex-col"
             style={{
@@ -47,7 +44,6 @@ export default function PageLayoutSimulator({ settings, onChangeSettings, onRese
             }}
             id="physical-pad-preview"
           >
-            {/* 1. Header Area Block */}
             <div 
               className="bg-slate-150 border-b border-dashed border-red-400 flex items-center justify-center text-[10px] text-slate-500 font-mono transition-all duration-300"
               style={{ height: `${settings.header.height * scale}px` }}
@@ -55,7 +51,6 @@ export default function PageLayoutSimulator({ settings, onChangeSettings, onRese
               Header Section ({settings.header.height}cm x {settings.header.width}cm)
             </div>
 
-            {/* 2. Patient Info Block */}
             <div 
               className="bg-blue-50 border-b border-dashed border-red-400 flex items-center justify-center text-[10px] text-blue-800 font-semibold transition-all duration-300"
               style={{ height: `${settings.patient.height * scale}px` }}
@@ -63,10 +58,9 @@ export default function PageLayoutSimulator({ settings, onChangeSettings, onRese
               Patient Info Bar ({settings.patient.height}cm)
             </div>
 
-            {/* 3. Middle Columns (History + Main Pad Rx Column) */}
+            {/* History and medication columns share the remaining height. */}
             <div className="flex flex-1 border-b border-dashed border-red-400">
               
-              {/* Complaints / History Left Bar */}
               <div 
                 className="bg-amber-50/70 border-r border-dashed border-red-400 flex items-center justify-center text-center p-1 text-[9px] text-amber-900 font-mono transition-all duration-300"
                 style={{ width: `${settings.history.width * scale}px` }}
@@ -74,7 +68,6 @@ export default function PageLayoutSimulator({ settings, onChangeSettings, onRese
                 Complaints, O/E, Dx ({settings.history.width}cm)
               </div>
               
-              {/* Prescription Rx Main Pad Box */}
               <div 
                 className="bg-white flex-1 flex items-center justify-center text-slate-400 font-serif font-bold text-base relative transition-all duration-300"
               >
@@ -83,7 +76,6 @@ export default function PageLayoutSimulator({ settings, onChangeSettings, onRese
               </div>
             </div>
 
-            {/* 4. Footer Section Box */}
             <div 
               className="bg-emerald-50 border-t border-dashed border-red-400 flex items-center justify-center text-[10px] text-emerald-800 font-serif font-semibold transition-all duration-300"
               style={{ height: `${settings.footer.height * scale}px` }}
@@ -101,15 +93,13 @@ export default function PageLayoutSimulator({ settings, onChangeSettings, onRese
           </button>
         </div>
 
-        {/* Input Tuning Grid Controls */}
+        {/* Section dimensions in centimetres */}
         <div className="lg:col-span-7 space-y-4">
           <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-xs space-y-4 text-xs text-slate-700">
             <h3 className="font-semibold text-slate-900 text-sm border-b pb-2">Modify Padding Sizes (cm)</h3>
             
-            {/* Grid for Dimension Blocks */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               
-              {/* Header Dimensions Setup */}
               <div className="bg-slate-50 p-3 rounded border border-slate-150">
                 <span className="block font-bold text-slate-800 mb-1.5 font-sans">১. হেডার সাইজ (Header Size):</span>
                 <div className="flex gap-2">
@@ -136,7 +126,6 @@ export default function PageLayoutSimulator({ settings, onChangeSettings, onRese
                 </div>
               </div>
 
-              {/* Patient Block Dimensions Setup */}
               <div className="bg-blue-50/50 p-3 rounded border border-blue-150">
                 <span className="block font-bold text-slate-800 mb-1.5 font-sans">২. রোগীর তথ্য (Patient Info Size):</span>
                 <div className="flex gap-2">
@@ -163,7 +152,6 @@ export default function PageLayoutSimulator({ settings, onChangeSettings, onRese
                 </div>
               </div>
 
-              {/* Patient History Complaints setup */}
               <div className="bg-amber-50/50 p-3 rounded border border-amber-150">
                 <span className="block font-bold text-slate-800 mb-1.5 font-sans">৩. হিস্ট্রি অংশ (History Column Size):</span>
                 <div className="flex gap-2">
@@ -190,7 +178,6 @@ export default function PageLayoutSimulator({ settings, onChangeSettings, onRese
                 </div>
               </div>
 
-              {/* Rx prescriptions setup */}
               <div className="bg-slate-50 p-3 rounded border border-slate-150">
                 <span className="block font-bold text-slate-800 mb-1.5 font-sans">৪. মূল প্যাড প্রেসক্রিপশন অংশ:</span>
                 <div className="flex gap-2">
@@ -217,7 +204,6 @@ export default function PageLayoutSimulator({ settings, onChangeSettings, onRese
                 </div>
               </div>
 
-              {/* Footer Setup */}
               <div className="bg-emerald-50/50 p-3 rounded border border-emerald-150">
                 <span className="block font-bold text-slate-800 mb-1.5 font-sans">৫. ফুটার (Footer Size):</span>
                 <div className="flex gap-2">
@@ -244,7 +230,6 @@ export default function PageLayoutSimulator({ settings, onChangeSettings, onRese
                 </div>
               </div>
 
-              {/* Total Page Margins Setup */}
               <div className="bg-red-50/30 p-3 rounded border border-red-150">
                 <span className="block font-bold text-red-900 mb-1.5 font-sans">৬. সম্পূর্ণ প্রেসক্রিপশনের সাইজ:</span>
                 <div className="flex gap-2">

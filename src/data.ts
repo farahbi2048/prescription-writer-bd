@@ -109,7 +109,7 @@ export const INITIAL_PATIENTS: Patient[] = [
     presentHistory: "Experiencing elevated blood pressure during stressful workspace schedules.",
     notes: "Patient is advised to maintain a low-salt diet and exercise at least 30 minutes daily.",
     
-    // Calculators initialization
+    // Sample calculator inputs and results for the initial screen.
     bmiWeight: "75",
     bmiHeightFeet: "5",
     bmiHeightInch: "8",

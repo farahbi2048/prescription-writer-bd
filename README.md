@@ -1,152 +1,152 @@
-<h1 align="center">Prescription Writer BD</h1>
+# Prescription Writer BD
 
-<p align="center">
-  A React and TypeScript healthcare workflow prototype for drafting prescriptions, managing patient visits,
-  performing clinical calculations, and configuring prescription-print layouts.
-</p>
+A student portfolio project for drafting prescriptions and exploring a clinic's daily workflow. The frontend uses React and TypeScript. A FastAPI backend handles account registration, login and patient API requests.
 
-<p align="center">
-  <img alt="status" src="https://img.shields.io/badge/status-prototype-orange">
-  <img alt="stack" src="https://img.shields.io/badge/stack-React%20%7C%20TypeScript%20%7C%20Vite-blue">
-  <img alt="node" src="https://img.shields.io/badge/node-%3E%3D20-green">
-</p>
+## What works now
 
----
+- Register a doctor account, sign in and restore the session after a page refresh.
+- Load demo patients, edit their details and save those fields in the browser.
+- Search the bundled medicine list and build a medication list for the current prescription.
+- Preview and print a prescription, with or without the clinic header.
+- Create local appointments and demo payment records.
+- Change header details, colours and page-preview dimensions.
 
-## The problem
+SMS sending and credit purchases are simulations. They update local UI state without contacting a carrier or payment provider.
 
-Clinical documentation and prescription preparation can require repeatedly entering patient demographics, examination findings, clinical history, medication details, follow-up information, and billing records. This prototype explores a single browser-based workspace that keeps these tasks together while providing a print-oriented prescription layout.
+## Where the data goes
 
-## The approach
+Authentication uses the backend. Passwords are hashed with bcrypt, and login returns a JWT access token. The frontend stores that token in `localStorage` and checks it through `/api/auth/me` when the app opens.
 
-The application uses a tabbed, client-side workflow. Patient and prescription information is held in typed React state, persisted locally in the browser, and reused across the relevant screens.
+The prescription workspace has separate storage. Patient fields, appointments, payment records, header settings and page settings are saved under `bd_prescription_*` keys in the browser. These records are not synced to the patient API or separated by doctor account in browser storage.
 
-| # | Workflow step | What happens |
-|---|---|---|
-| 1 | **Patient selection** | Select an existing demo patient or start a new patient record with demographics, history, examination and diagnosis fields. |
-| 2 | **Medication entry** | Search the local Bangladesh brand-index dataset, choose a medicine, and add dose, duration and food instructions to the prescription. |
-| 3 | **Clinical calculations** | Calculate BMI, insulin-dose suggestions, BMR, paediatric growth-screening values and estimated delivery date (EDD) from entered patient data. |
-| 4 | **Save visit** | Persist the active patient record locally; simulate a payment record and complete a linked appointment when applicable. |
-| 5 | **Layout and print** | Configure header details and centimetre-based prescription-pad dimensions, preview the layout, then invoke the browser print dialog. |
+The backend uses SQLAlchemy with SQLite by default. Starting it from `backend/` creates `backend/database.db`. The database has tables for users, patients, prescriptions, AI sessions and audit logs. Only authentication and patient routes are currently registered. Patient changes through the API create audit entries; browser-only changes do not.
 
-```mermaid
-graph LR
-    A[Patient profile] --> B[Clinical details and medications]
-    B --> C[Clinical calculators]
-    C --> D[Save prescription]
-    D --> E[Local browser storage]
-    E --> F[History, appointments, payments and print]
+The current medication list lives in React state. Saving a prescription saves the patient fields and adds a demo payment, but does not save the medication list. Loading a saved patient replaces the list with sample medicines.
+
+## Files to start with
+
+| File | Purpose |
+| --- | --- |
+| `src/App.tsx` | Workspace state, patient editing, appointments, payments and prescription rendering |
+| `src/context/AuthContext.tsx` | Login, registration, token storage and session checks |
+| `src/components/AuthGateway.tsx` | Login and registration forms |
+| `src/components/AiScribe.tsx` | Audio upload, editable SOAP draft and patient handoff |
+| `src/components/Calculators.tsx` | BMI, insulin split, growth placeholder, calorie and delivery-date calculations |
+| `src/components/PageLayoutSimulator.tsx` | Dimension inputs and the scaled pad preview |
+| `src/data.ts` | Demo records, medicine list and default settings |
+| `src/types.ts` | Frontend data types |
+| `src/index.css` | Fonts and print rules |
+| `backend/app/main.py` | API setup, CORS and registered routers |
+| `backend/app/routers/` | Authentication and patient endpoints |
+| `backend/app/models.py` | SQLAlchemy table definitions |
+| `backend/app/schemas.py` | Request and response models |
+| `backend/app/security.py` | Password hashing and JWT creation |
+| `backend/app/dependencies.py` | Token validation and current-user lookup |
+| `backend/app/database.py` | Database engine and request sessions |
+| `backend/app/config.py` | Backend environment settings |
+| `backend/main.py` | Entry point for the Uvicorn command below |
+| `backend/models.py` | Earlier audio-analysis response models |
+| `.github/workflows/deploy.yml` | Frontend deployment to GitHub Pages |
+
+## Running locally
+
+Use Node.js 20 or newer and Python 3.10 or newer. Run the backend and frontend in separate terminals.
+
+From the repository root, set up the backend in PowerShell:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r backend/requirements.txt
 ```
 
-## Tech stack
+If PowerShell blocks activation, allow local scripts for that terminal and try activation again:
 
-**Frontend** — React 19 · TypeScript · Vite · Tailwind CSS · Lucide React
-
-**State and persistence** — React Hooks (`useState`, `useEffect`) · Browser `localStorage`
-
-**Tooling and deployment** — npm · TypeScript compiler · GitHub Actions · GitHub Pages
-
-## Repository layout
-
-```
-src/
-  main.tsx                         application entry point; mounts React into index.html
-  App.tsx                          primary workflow, state management and screen composition
-  data.ts                          local seed data: medicines, patients, appointments and settings
-  types.ts                         shared TypeScript interfaces for application data
-  index.css                        global and print styles
-  components/
-    Calculators.tsx                BMI, insulin, BMR, Z-score and EDD calculators
-    PageLayoutSimulator.tsx        prescription-pad dimension controls and visual preview
-.github/workflows/deploy.yml       GitHub Pages build and deployment workflow
-vite.config.ts                     Vite, React and Tailwind configuration
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
+.\.venv\Scripts\Activate.ps1
 ```
 
-## Getting started
+For first-time setup, copy `backend/.env.example` to `backend/.env`. Skip this command if you already have a configured file:
 
-**Prerequisite:** Node.js 20 or newer.
+```powershell
+Copy-Item backend/.env.example backend/.env
+```
 
-```bash
+Set a long, random `JWT_SECRET_KEY` in `backend/.env`. Keep it and any API keys out of Git. The current authentication and patient routes do not use the Gemini key.
+
+Start the API:
+
+```powershell
+cd backend
+python -m uvicorn main:app --reload --port 8000
+```
+
+Check `http://127.0.0.1:8000/health` or open the API docs at `http://127.0.0.1:8000/docs`.
+
+In a second terminal, from the repository root:
+
+```powershell
 npm install
 npm run dev
 ```
 
-Open the local address shown by Vite (normally `http://localhost:3000`).
+Open `http://localhost:3000` and register an account. Registration is followed by login automatically. Later visits can use the same email and password.
 
-Useful commands:
+The auth API address defaults to `http://127.0.0.1:8000`. Set `VITE_API_BASE_URL` in a root `.env.local` if the backend is elsewhere, then restart Vite. The backend's `CORS_ORIGINS` must include the frontend origin.
 
-```bash
-npm run lint     # TypeScript type check
-npm run build    # Production build to dist/
-npm run preview  # Preview the production build locally
-```
-
-## GitHub Pages deployment
-
-The repository includes a GitHub Actions workflow at [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml). After pushing the repository to GitHub:
-
-1. Open **Settings → Pages** in the GitHub repository.
-2. Under **Build and deployment**, choose **GitHub Actions** as the source.
-3. Push to the `main` branch. The workflow builds the Vite app and deploys the generated `dist/` folder.
-
-## Backend foundation (SQLite first)
-
-The repository now includes a FastAPI foundation in `backend/app/` for the planned move from browser-only storage to a secure server-side application:
-
-- SQLAlchemy models for users, patients, prescriptions, AI sessions and audit logs
-- Doctor registration/login with bcrypt password hashing and JWT access tokens
-- Protected, doctor-scoped patient CRUD endpoints
-- SQLite by default, with `DATABASE_URL` ready to switch to PostgreSQL later
-
-Create `backend/.env` from `backend/.env.example`, set a long unique `JWT_SECRET_KEY`, then install and run the backend:
+Other commands:
 
 ```powershell
-cd backend
-python -m pip install -r requirements.txt
-Copy-Item .env.example .env
-python -m uvicorn main:app --reload --port 8000
+npm run lint     # TypeScript check
+npm run build    # Build the frontend into dist/
+npm run preview  # Serve the built frontend locally
 ```
 
-The API documentation is then available at `http://localhost:8000/docs`. The current React workflow still uses browser storage; connecting its existing screens to these protected endpoints is the next migration step.
+## AI Scribe
 
-## AI Scribe local integration
+The review screen is implemented, but the current FastAPI app does not register `POST /api/visit-audio`. Starting this backend alone will not make audio processing work. The Gemini and OpenFDA integration still needs to be restored in the authenticated backend.
 
-The optional AI Scribe workflow is designed for audio-to-SOAP documentation drafting and an informational OpenFDA label lookup. The React review interface is present, but the `/api/visit-audio` route from the earlier prototype has not yet been migrated into the current authenticated FastAPI router structure.
+The frontend expects a SOAP note, medicine-label lookup results and a disclaimer from that endpoint. Its API address comes from `VITE_MEDSCRIBE_API_URL`, defaulting to `http://localhost:8000`.
 
-```text
-React app (port 3000) -> FastAPI AI Scribe API (port 8000) -> Gemini / OpenFDA
-```
+Once the endpoint is available, the review flow is:
 
-Start the API in a first terminal:
+1. Load the intended patient from **Saved Patients & History**.
+2. Open **AI Scribe** and upload a fictional visit recording.
+3. Review and edit the returned SOAP fields.
+4. Select **Apply reviewed draft & open prescription**.
+5. Review the patient record and save the visit.
 
-```powershell
-cd backend
-python -m pip install -r requirements.txt
-Copy-Item .env.example .env
-# Edit backend/.env and add GEMINI_API_KEY before continuing.
-python -m uvicorn main:app --reload --port 8000
-```
+The handoff replaces chief complaints, present history and diagnosis with the reviewed values. It appends objective findings and the plan to the patient's notes. Medicine names mentioned in the recording are not added to the prescription automatically.
 
-Start the React application in a second terminal from the repository root:
+Present history and notes are stored with the patient, but the current pad does not render them. Applying a draft does not save it automatically, and leaving the AI Scribe screen discards its local review state.
 
-```powershell
-npm run dev
-```
+AI output is a draft requiring clinician review. The medicine index and label lookups are informational; they do not provide medical advice or prescribing recommendations.
 
-After the AI route is restored, open **Saved Patients & History**, load the intended patient, then open **AI Scribe**. Upload a non-identifiable demo MP3/WAV, review and edit every extracted field, and select **Apply reviewed draft & open prescription**. The reviewed fields are copied to the current patient in memory and the Prescription Pad opens; the clinician must still review and save the visit. The AI Scribe API is not deployed by the included GitHub Pages workflow.
+## Implementation notes
 
-The local medicine brand list is demonstration data for informational search only. It does not provide medical advice or prescribing recommendations. Product, indication and manufacturer details must be checked against current authoritative sources before use.
+- The BMI weight range uses BMI bounds of 18.5 and 24.9. The existing UI label calling it a Devine calculation needs correction.
+- The growth tab uses placeholder weight bands, not a WHO Z-score calculation. Its UI labels still need correction.
+- The growth and gestational-age calculations use the fixed date `2026-05-19`.
+- Selecting a medicine can fill demo dose presets based on drug class. These are not validated prescribing rules.
+- The pad designer is a scaled preview. Several saved dimension and print preferences are not applied to the final print layout.
+- Printing uses `window.print()` and A4 CSS. There is no direct ESC/POS printer integration, despite the current button label.
+- The barcode is decorative and does not encode patient details.
+- The revisit fee is chosen whenever the registration number already appears in the local patient list. Every save adds another demo payment.
+- Browser storage is not an offline application cache or a database synchronizer.
 
-## Data, privacy and clinical-safety notice
+## Deployment
 
-This project is a student portfolio prototype, not a production clinical information system. All preloaded patient, appointment, payment and clinician records are fictional demonstration data. Any resemblance to real people or organizations is coincidental. Never enter real patient-identifiable or clinical data into this prototype.
+The GitHub Actions workflow builds the frontend on pushes to `main`, or when run manually. In the repository's **Settings → Pages**, select **GitHub Actions** as the deployment source.
 
-The current branch includes JWT authentication, SQLite/SQLAlchemy models, doctor-scoped patient endpoints and partial audit logging for patient mutations. Most prescription-workspace, appointment and payment data still remains in browser `localStorage`; the frontend is not yet synchronized with the backend database. Encryption at rest, comprehensive role-based authorization, complete audit coverage, automated testing, clinical validation and regulatory/privacy review are not implemented.
+GitHub Pages hosts only the frontend. A deployed login screen needs a separately hosted API, a reachable `VITE_API_BASE_URL` set at build time, and matching backend CORS settings.
 
-The production plan requires migration to managed PostgreSQL, stronger role-based access, encryption in transit and at rest, comprehensive audit logging, automated testing, backups, monitoring and applicable clinical, privacy and regulatory review.
+## Demo data and remaining work
 
-The calculator outputs and prescription-related content are demonstration features only and must not be used for clinical decision-making, diagnosis, treatment, or medication dosing.
+All preloaded patient, contact, appointment, payment and clinician records are fictional. Any resemblance to real people or organizations is coincidental. Use fictional data and recordings when demonstrating the app.
 
-## Status
+This is not a production clinical system. Calculator results and prescription content have not been clinically validated. Check medicine information against authoritative sources before clinical use.
 
-The project now has a frontend workflow plus an authentication and patient-API foundation. Next work includes connecting frontend records to the backend, restoring the protected AI Scribe route, adding prescription and AI-session APIs, introducing Alembic migrations, moving to PostgreSQL, and completing security, testing and accessibility work.
+The next development work is to connect workspace records to the protected API, persist prescriptions and medications, restore the audio route, add database migrations and resolve the limitations listed above.
+
+Production deployment would also require managed PostgreSQL or a suitable managed relational database, stronger role-based access, encryption in transit and at rest, comprehensive audit logging, automated tests, backups, monitoring, clinical validation and applicable privacy and regulatory review.
