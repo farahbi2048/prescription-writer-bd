@@ -1,3 +1,5 @@
+"""Environment settings used by the FastAPI application."""
+
 import os
 from functools import lru_cache
 
@@ -8,6 +10,7 @@ load_dotenv()
 
 @lru_cache
 def settings() -> dict[str, str]:
+    """Load backend settings once and return their configured values."""
     return {
         "database_url": os.getenv("DATABASE_URL", "sqlite:///./database.db"),
         "secret_key": os.getenv("JWT_SECRET_KEY", "change-this-development-secret"),

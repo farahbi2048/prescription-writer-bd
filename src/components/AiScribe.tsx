@@ -1,3 +1,4 @@
+/** Audio upload and review screen for AI-generated SOAP drafts. */
 import React, { useState } from 'react';
 import { AlertTriangle, AudioLines, CheckCircle2, FileAudio, LoaderCircle, ShieldAlert } from 'lucide-react';
 import { Patient } from '../types';
@@ -33,6 +34,7 @@ interface AiScribeProps {
   isDemo: boolean;
 }
 
+/** Collect, review and apply an AI Scribe draft to the selected patient. */
 export default function AiScribe({ patient, onApplyReviewedDraft, backendStatus, accessToken, isDemo }: AiScribeProps) {
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [draft, setDraft] = useState<SoapDraft | null>(null);
@@ -40,12 +42,13 @@ export default function AiScribe({ patient, onApplyReviewedDraft, backendStatus,
   const [disclaimer, setDisclaimer] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
-  const [applied, setApplied] = useState(false);
 
+  /** Update one editable field without replacing the rest of the draft. */
   const updateDraft = (field: keyof SoapDraft, value: string) => {
     setDraft((current) => current ? { ...current, [field]: value } : current);
   };
 
+  /** Upload the chosen recording and store the structured API response. */
   const analyseAudio = async () => {
     if (isDemo) {
       setError('Live AI processing is protected from public misuse. Sign in with a test account to process synthetic audio.');
@@ -65,7 +68,6 @@ export default function AiScribe({ patient, onApplyReviewedDraft, backendStatus,
     }
 
     setError('');
-    setApplied(false);
     setIsProcessing(true);
     try {
       const formData = new FormData();
@@ -91,6 +93,7 @@ export default function AiScribe({ patient, onApplyReviewedDraft, backendStatus,
     }
   };
 
+  /** Map reviewed SOAP fields to patient fields used by the prescription pad. */
   const applyReviewedDraft = () => {
     if (!draft) return;
     const notes = [
@@ -105,7 +108,6 @@ export default function AiScribe({ patient, onApplyReviewedDraft, backendStatus,
       dx: draft.assessment,
       notes,
     });
-    setApplied(true);
   };
 
   return (
@@ -127,6 +129,7 @@ export default function AiScribe({ patient, onApplyReviewedDraft, backendStatus,
       <div className="bg-white border border-slate-200 p-5 rounded-xl shadow-xs">
         <h3 className="font-bold text-slate-800 text-sm">1. Upload visit audio</h3>
         <p className="text-xs text-slate-500 mt-1">Current patient: <strong>{patient.name}</strong> (Reg. #{patient.regNo})</p>
+        <p className="text-[11px] text-slate-500 mt-1">To update an existing record, first load that patient from Saved Patients &amp; History, then return to AI Scribe.</p>
         <div className="mt-4 flex flex-col sm:flex-row gap-3 items-start sm:items-center">
           <label className="cursor-pointer w-full sm:w-auto inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 px-4 py-2 rounded text-sm font-semibold text-slate-700">
             <FileAudio className="w-4 h-4" />
@@ -153,7 +156,7 @@ export default function AiScribe({ patient, onApplyReviewedDraft, backendStatus,
             <div className="flex flex-wrap justify-between gap-3 mb-4">
               <div>
                 <h3 className="font-bold text-slate-800 text-sm">2. Review and edit extracted draft</h3>
-                <p className="text-xs text-slate-500 mt-1">Nothing is added to the prescription until you select “Apply reviewed draft”.</p>
+                <p className="text-xs text-slate-500 mt-1">Nothing is added until you apply the reviewed draft. You will then return to the selected patient’s Prescription Pad, where you must save the visit.</p>
               </div>
               <span className="self-start bg-amber-100 text-amber-800 border border-amber-200 px-2 py-1 rounded text-xs font-bold">Recorded urgency: {draft.urgency_patient}</span>
             </div>
@@ -172,9 +175,8 @@ export default function AiScribe({ patient, onApplyReviewedDraft, backendStatus,
               ))}
             </div>
             <button onClick={applyReviewedDraft} className="mt-5 inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold px-4 py-2 rounded shadow-sm">
-              <CheckCircle2 className="w-4 h-4" /> Apply reviewed draft to current patient
+              <CheckCircle2 className="w-4 h-4" /> Apply reviewed draft &amp; open prescription
             </button>
-            {applied && <p className="mt-3 text-sm font-semibold text-emerald-700">Draft applied. Review the Prescription tab and save the visit when ready.</p>}
           </div>
 
           <div className="bg-white border border-slate-200 p-5 rounded-xl shadow-xs">

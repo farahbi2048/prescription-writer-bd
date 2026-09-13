@@ -1,3 +1,4 @@
+/** Login and registration screen for the clinician workspace. */
 import { FormEvent, useState } from 'react';
 import { ArrowRight, LoaderCircle, ShieldCheck, Stethoscope } from 'lucide-react';
 
@@ -8,6 +9,7 @@ interface AuthGatewayProps {
   backendStatus: BackendStatus;
 }
 
+/** Switch between login and registration while sharing one submit handler. */
 export default function AuthGateway({ backendStatus }: AuthGatewayProps) {
   const { login, register, enterDemo } = useAuth();
   const [mode, setMode] = useState<'login' | 'register'>('login');
@@ -17,6 +19,7 @@ export default function AuthGateway({ backendStatus }: AuthGatewayProps) {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  /** Submit credentials through the authentication context. */
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     setError('');

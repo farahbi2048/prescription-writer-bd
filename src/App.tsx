@@ -1,3 +1,4 @@
+/** Main workspace, local records, prescription editing and print preview. */
 import React, { useState, useEffect } from 'react';
 import { 
   Users, 
@@ -24,7 +25,6 @@ import {
   LogOut
 } from 'lucide-react';
 
-// Import local submodules and data
 import { Patient, RxDrug, Appointment, PaymentRecord, HeaderSettings, PageSetupSettings } from './types';
 import { 
   INITIAL_DRUGS, 
@@ -55,10 +55,12 @@ export default function App() {
   return <Workspace backendStatus={backendStatus} />;
 }
 
+// ---------- Workspace state ----------
+
 function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
   const { user, accessToken, isDemo, logout } = useAuth();
   if (!user) return null;
-  // ---- Persisted or Live States ----
+  // Workspace records are stored in this browser, separately from the patient API.
   const [patients, setPatients] = useState<Patient[]>(() => {
     const local = localStorage.getItem('bd_prescription_patients');
     const savedPatients: Patient[] = local ? JSON.parse(local) : INITIAL_PATIENTS;
@@ -95,12 +97,11 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
     return INITIAL_PAGE_SETUP;
   });
 
-  // ---- Active Workspace Selection States ----
   const [activeTab, setActiveTab] = useState<
     'PrescriptionPad' | 'AiScribe' | 'AllSaved' | 'Directory' | 'Appointments' | 'Payments' | 'SMS' | 'HeaderEdit' | 'PageSetup'
   >('PrescriptionPad');
 
-  // ---- Active Prescription Editor States ----
+  // The current patient and medication list are edited in memory.
   const [currentPatient, setCurrentPatient] = useState<Patient>({ ...patients[0] });
   const [rxDrugs, setRxDrugs] = useState<RxDrug[]>([
     { id: 'rx-1', brandName: 'Napa Extend 665mg', dose: '1+0+1', duration: '5', durationUnit: 'Days', beforeFood: false, afterFood: true },
@@ -108,7 +109,7 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
     { id: 'rx-3', brandName: 'Rosuva 10mg', dose: '0+0+1', duration: '30', durationUnit: 'Days', beforeFood: false, afterFood: true }
   ]);
 
-  // ---- Drug Form Inputs ----
+  // ---------- Medication entry ----------
   const [drugSearchQuery, setDrugSearchQuery] = useState('');
   const [selectedBrand, setSelectedBrand] = useState({ brand: '', generic: '', company: '' });
   const [drugDose, setDrugDose] = useState('1+0+1');
@@ -117,26 +118,26 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
   const [beforeFood, setBeforeFood] = useState(false);
   const [afterFood, setAfterFood] = useState(true);
 
-  // ---- Custom UI Visual Themes & Print Density Sizing ----
+  // ---------- Prescription appearance ----------
   const [padColorTheme, setPadColorTheme] = useState<'blue' | 'emerald' | 'teal' | 'amber' | 'rose' | 'indigo'>('blue');
   const [padFontSizeTheme, setPadFontSizeTheme] = useState<'small' | 'medium' | 'large'>('medium');
 
-  // ---- General Searching/Filtering Queries ----
   const [globalSearch, setGlobalSearch] = useState('');
   const [directorySearch, setDirectorySearch] = useState('');
   const [appointmentSearch, setAppointmentSearch] = useState('');
 
-  // ---- Print Modal States ----
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [printWithHeaderMode, setPrintWithHeaderMode] = useState(true);
 
-  // ---- SMS Router simulation states ----
-  const [smsBalance, setSmsBalance] = useState(1480); // Remaining credits SMS
+  // ---------- SMS demonstration ----------
+  // Credits and results are simulated for the current session.
+  const [smsBalance, setSmsBalance] = useState(1480);
   const [smsMobile, setSmsMobile] = useState('');
   const [smsMessage, setSmsMessage] = useState('');
   const [smsOutcome, setSmsOutcome] = useState('');
 
-  // ---- Sync States to LocalStorage ----
+  // ---------- Browser storage ----------
+  // Save each collection when its state changes.
   useEffect(() => {
     localStorage.setItem('bd_prescription_patients', JSON.stringify(patients));
   }, [patients]);
@@ -157,10 +158,10 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
     localStorage.setItem('bd_prescription_page_setup', JSON.stringify(pageSetup));
   }, [pageSetup]);
 
-  // ---- Patient List Selection and Loading ----
+  /** Load a saved patient into the editor with the current demo medicines. */
   const handleSelectPatient = (p: Patient) => {
     setCurrentPatient(normalizePatientTemperature(p));
-    // Also simulate loading empty medication or populate default
+    // Saved patients do not include medications yet; loading one resets these demo items.
     setRxDrugs([
       { id: 'rx-tmp-1', brandName: 'Napa Extend 665mg', dose: '1+0+1', duration: '5', durationUnit: 'Days', beforeFood: false, afterFood: true },
       { id: 'rx-tmp-2', brandName: 'Nexum 40mg', dose: '1+0+1', duration: '14', durationUnit: 'Days', beforeFood: true, afterFood: false }
@@ -168,21 +169,27 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
     setActiveTab('PrescriptionPad');
   };
 
-  // ---- Update Patient Details Live ----
+  /** Merge edited fields into the patient currently open in the workspace. */
   const handleUpdatePatient = (updated: Partial<Patient>) => {
     setCurrentPatient(prev => ({ ...prev, ...updated }));
   };
 
-  // ---- Add New Patient Initializing Empty State ----
+  /** Copy reviewed Scribe fields into the current patient and reopen the pad. */
+  const handleApplyAiScribeDraft = (updated: Partial<Patient>) => {
+    setCurrentPatient(prev => ({ ...prev, ...updated }));
+    setActiveTab('PrescriptionPad');
+  };
+
+  /** Create a blank demo patient and open the prescription editor. */
   const handleCreateEmptyPatient = () => {
     const newReg = Math.floor(100000 + Math.random() * 900000).toString();
     const fresh: Patient = {
       id: `pat-${Date.now()}`,
-      name: 'New Registered Patient',
+      name: 'New Demo Patient',
       age: '30',
       sex: 'M',
       address: 'Dhaka',
-      mobile: '01700000000',
+      mobile: '00000000000',
       regNo: newReg,
       date: new Date().toISOString().split('T')[0],
       dx: '',
@@ -246,9 +253,11 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
     setActiveTab('PrescriptionPad');
   };
 
-  // ---- Save active Prescription to history and trigger billing record ----
+  // ---------- Prescription actions ----------
+
+  /** Save patient fields and add a demo payment record. */
   const handleSavePrescription = () => {
-    // 1. Update/Inject patient data
+    // The medication list is not persisted yet.
     const existingIndex = patients.findIndex(p => p.id === currentPatient.id);
     let updatedList = [...patients];
     if (existingIndex > -1) {
@@ -258,7 +267,7 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
     }
     setPatients(updatedList);
 
-    // 2. Generate billing payment record automatically based on fees
+    // Any registration already in the local patient list gets the revisit fee.
     const isReturning = patients.some(p => p.regNo === currentPatient.regNo);
     const feeCollected = isReturning ? pageSetup.reVisitFees : pageSetup.visitFees;
 
@@ -273,7 +282,7 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
     };
     setPayments([newPayment, ...payments]);
 
-    // 3. Complete associated appointment if exists
+    // Mark appointments with the same registration number as completed.
     setAppointments(prev => prev.map(ap => {
       if (ap.regNo === currentPatient.regNo) {
         return { ...ap, status: 'Completed' };
@@ -284,7 +293,7 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
     alert(`Prescription successfully compiled & saved locally!\nPatient ID: ${currentPatient.regNo}\nVisited Fee accounted: ৳${feeCollected}`);
   };
 
-  // ---- Drug Management Handlers ----
+  /** Add the selected medicine and its instructions to the current list. */
   const handleAddDrug = () => {
     if (!selectedBrand.brand) {
       alert("Please select or search a brand name first!");
@@ -300,16 +309,17 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
       afterFood: afterFood
     };
     setRxDrugs([...rxDrugs, newDrug]);
-    // Reset inputs
     setDrugSearchQuery('');
     setSelectedBrand({ brand: '', generic: '', company: '' });
   };
 
+  /** Remove one medicine from the current prescription. */
   const handleDeleteDrug = (id: string) => {
     setRxDrugs(rxDrugs.filter(d => d.id !== id));
   };
 
-  // ---- Filter Drug brand suggestions based on local database query ----
+  // ---------- Search and navigation helpers ----------
+  // Search the bundled brand list by brand or generic name.
   const filteredSuggestions = drugSearchQuery.trim()
     ? INITIAL_DRUGS.filter(d => 
         d.brand.toLowerCase().includes(drugSearchQuery.toLowerCase()) || 
@@ -317,13 +327,13 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
       )
     : [];
 
-  // ---- Direct PDF simulated printing trigger ----
+  /** Open the preview with either a generated or preprinted header. */
   const handleTriggerPrint = (withHeader: boolean) => {
     setPrintWithHeaderMode(withHeader);
     setShowPrintModal(true);
   };
 
-  // ---- Appointment Register state handler ----
+  /** Add an appointment to local state after checking the required fields. */
   const handleCreateAppointment = (name: string, mobile: string, age: string, sex: string) => {
     if (!name || !mobile) {
       alert("Please specify patient Name and Contact Mobile number!");
@@ -351,7 +361,7 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 flex flex-col antialiased">
       
-      {/* 1. TOP SYSTEM BAR (Replicates professional medical OS dashboard) */}
+      {/* ---------- Workspace header ---------- */}
       <header className="bg-white border-b border-slate-200 shrink-0 sticky top-0 z-40 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 py-2.5 flex flex-wrap justify-between items-center gap-4">
           
@@ -361,7 +371,7 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
             </div>
             <div>
               <span className="text-[10px] font-mono tracking-widest text-[#0066cc] font-bold uppercase block">
-                Zilsoft Pro Simulator [BD v2.8]
+                Clinical Workspace
               </span>
               <h1 className="text-base font-extrabold text-slate-900 leading-none font-sans">
                 Prescription Writer BD
@@ -369,7 +379,6 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
             </div>
           </div>
 
-          {/* Core Navigation Workspace Tabs */}
           <nav className="flex flex-wrap items-center gap-1">
             <button
               onClick={() => setActiveTab('PrescriptionPad')}
@@ -508,17 +517,18 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
         </div>
       )}
 
-      {/* 2. MAIN HUB WORKSPACE AREA */}
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-6">
+        <div className="mb-5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">
+          <strong>Portfolio demonstration:</strong> All preloaded patient, appointment, payment and clinician records are fictional. Do not enter real patient-identifiable information. AI output is a draft and requires clinician review before use.
+        </div>
         
-        {/* TAB 1: INTERACTIVE PRESCRIPTION EDITOR */}
+        {/* ---------- Prescription editor ---------- */}
         {activeTab === 'PrescriptionPad' && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6" id="workspace-prescription-editor">
             
-            {/* LEFT BAR - PATIENT DETAILS AND CLINICAL EXAMINATIONS (Cols 4) */}
+            {/* Patient details and examination */}
             <div className="lg:col-span-4 space-y-4">
               
-              {/* Patient Basic Demographics Block */}
               <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-xs">
                 <div className="flex justify-between items-center mb-3">
                   <h3 className="text-xs font-mono font-bold tracking-wider text-slate-700 uppercase flex items-center">
@@ -600,7 +610,7 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                 </div>
               </div>
 
-              {/* On Examination (O/E) & Complaints Panel */}
+              {/* Complaints and examination findings */}
               <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-xs space-y-3 text-slate-900">
                 <h3 className="text-xs font-mono font-bold tracking-wider text-slate-700 uppercase">
                   O/E Symptoms & History Findings (O/E এবং লক্ষণসমূহ)
@@ -618,7 +628,6 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                     />
                   </div>
 
-                  {/* On Examination Vitals Grid */}
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <label className="block text-slate-500 font-bold text-[10px]">Blood Pressure (BP)</label>
@@ -716,15 +725,13 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                 </div>
               </div>
 
-              {/* RENDER EMBEDDED DYNAMIC MATHEMATICAL CALCULATORS */}
               <Calculators patient={currentPatient} onUpdatePatient={handleUpdatePatient} />
 
             </div>
 
-            {/* MIDDLE/RIGHT WORKSPACE - CORE RX MEDICATION COMPILER & PAPER PAD SIMULATOR (Cols 8) */}
+            {/* Medications and prescription preview */}
             <div className="lg:col-span-8 space-y-4">
               
-              {/* Rx Drug Input form compilation bar */}
               <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-xs text-slate-900">
                 <span className="text-xs font-mono font-extrabold text-blue-700 block mb-2 uppercase">
                   💊 Rapid Medication Prescription Writer (নতুন ঔষধ যোগ করুন)
@@ -732,7 +739,6 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                 
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-3 text-xs">
                   
-                  {/* Brand Search bar with dynamic suggestions filter */}
                   <div className="md:col-span-4 relative text-slate-900">
                     <label className="block text-slate-500 font-bold text-[10px] mb-0.5">Search Drug Brand Name (ঔষধ)</label>
                     <div className="relative">
@@ -746,7 +752,6 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                       <Search className="w-3.5 h-3.5 absolute left-2 top-2.5 text-slate-400" />
                     </div>
 
-                    {/* Autocomplete suggestion container drop down */}
                     {filteredSuggestions.length > 0 && (
                       <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded shadow-lg max-h-48 overflow-y-auto z-50 divide-y divide-slate-100">
                         {filteredSuggestions.map((ds) => (
@@ -755,7 +760,7 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                             onClick={() => {
                               setSelectedBrand(ds);
                               setDrugSearchQuery(ds.brand);
-                              // Automate dosages based on standard clinical algorithms
+                              // Demo presets by drug class; these are not validated dosing rules.
                               if (ds.drugClass === "Proton Pump Inhibitors") {
                                 setDrugDose("1+0+1");
                                 setDrugDuration("14");
@@ -803,7 +808,6 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                     )}
                   </div>
 
-                  {/* Selected Item Generic readout */}
                   <div className="md:col-span-3">
                     <label className="block text-slate-500 font-bold text-[10px] mb-0.5">Generic / Drug Class</label>
                     <div className="bg-slate-50 border border-slate-200 p-1.5 rounded text-slate-700 font-mono text-[10px] truncate h-[29px] flex items-center">
@@ -811,7 +815,6 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                     </div>
                   </div>
 
-                  {/* Dosage settings (e.g. 1+0+1 or custom dropdowns) */}
                   <div className="md:col-span-2">
                     <label className="block text-slate-500 font-bold text-[10px] mb-0.5">Dose (মাত্রা)</label>
                     <select 
@@ -829,7 +832,6 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                     </select>
                   </div>
 
-                  {/* Duration count and units selectors */}
                   <div className="md:col-span-3 flex gap-1">
                     <div className="w-1/2">
                       <label className="block text-slate-500 font-bold text-[10px] mb-0.5">Duration</label>
@@ -857,7 +859,6 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
 
                 </div>
 
-                {/* Second row checkboxes - Before/After food */}
                 <div className="flex flex-wrap gap-4 items-center mt-3 text-xs text-slate-700">
                   <label className="flex items-center gap-1.5 cursor-pointer">
                     <input 
@@ -896,7 +897,6 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                 </div>
               </div>
 
-              {/* ACTION BUTTON PANEL */}
               <div className="flex flex-wrap gap-2 justify-end bg-white border border-slate-200 p-3 rounded-xl shadow-xs text-slate-900">
                 <button 
                   onClick={handleSavePrescription}
@@ -922,7 +922,7 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                 </button>
               </div>
 
-              {/* VIRTUAL PRESCRIPTION SHEET VISUALIZER - Designed to accurately replicate Zilsoft's real sheet pad */}
+              {/* Prescription preview, based on the Zilsoft-style pad layout */}
               <div className="bg-white border border-slate-200 p-4 rounded-xl shadow-xs space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-4 border-b pb-3">
                   <div>
@@ -934,7 +934,6 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                     </p>
                   </div>
                   
-                  {/* Visual selectors for color palettes */}
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-[10px] uppercase font-bold text-slate-500">Theme:</span>
                     <div className="flex gap-1">
@@ -983,7 +982,7 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                   </div>
                 </div>
 
-                {/* Visual rendering represent A4 Sheet, custom white styles optimized for clear medical reading */}
+                {/* The editor preview uses a compact screen layout. */}
                 <div 
                   className={`bg-white text-slate-900 rounded-lg p-6 shadow-2xl space-y-4 font-sans max-w-lg mx-auto border-4 border-double transition-all duration-300 ${
                     padColorTheme === 'blue' ? 'border-blue-200' :
@@ -995,7 +994,7 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                   id="live-virtual-sheet"
                 >
                   
-                  {/* Clinic Header Block with dynamic theme borders */}
+                  {/* Clinic header */}
                   <div 
                     className={`border-b-2 pb-3 flex justify-between items-start text-xs transition-colors duration-300 ${
                       padColorTheme === 'blue' ? 'border-blue-600' :
@@ -1037,7 +1036,7 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                     </div>
                   </div>
 
-                  {/* Patient Info Banner Grid */}
+                  {/* Patient summary */}
                   <div 
                     className={`p-2.5 rounded border grid grid-cols-4 gap-2 text-[10px] font-medium transition-colors duration-300 ${
                       padColorTheme === 'blue' ? 'bg-blue-50/70 border-blue-200 text-blue-900' :
@@ -1048,7 +1047,7 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                     }`}
                   >
                     <div>
-                      <span className="text-slate-500 block uppercase text-[8px] font-bold">Patient Name (নাম)</span>
+                      <span className="text-slate-500 block uppercase text-[8px] font-bold">Patient Name</span>
                       <strong className="text-slate-900 text-[11px] leading-tight font-sans">{currentPatient.name}</strong>
                     </div>
                     <div>
@@ -1056,7 +1055,7 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                       <strong className="text-slate-900 text-[11px] font-sans">{currentPatient.age} Yrs / {currentPatient.sex}</strong>
                     </div>
                     <div>
-                      <span className="text-slate-500 block uppercase text-[8px] font-bold">Date (তারিখ)</span>
+                      <span className="text-slate-500 block uppercase text-[8px] font-bold">Date</span>
                       <strong className="text-slate-900 text-[11px] font-sans">{currentPatient.date}</strong>
                     </div>
                     <div>
@@ -1065,10 +1064,9 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                     </div>
                   </div>
 
-                  {/* Primary Two-Column Layout (History column left vs Rx drugs right) */}
                   <div className="grid grid-cols-12 gap-4 pt-2">
                     
-                    {/* Complaints left column (History Column) (Cols 4) */}
+                    {/* Complaints, examination, investigations and diagnosis */}
                     <div className="col-span-4 border-r border-slate-200 pr-3 text-[10px] text-slate-700 space-y-4 font-mono">
                       
                       {currentPatient.cc && (
@@ -1079,7 +1077,7 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                             padColorTheme === 'teal' ? 'text-teal-850' :
                             padColorTheme === 'amber' ? 'text-amber-850' :
                             padColorTheme === 'rose' ? 'text-rose-850' : 'text-indigo-850'
-                          }`}>C/C (উপসর্গ):</span>
+                          }`}>C/C (Chief Complaints):</span>
                           <p className="whitespace-pre-line text-slate-600 leading-relaxed font-sans mt-0.5">{currentPatient.cc}</p>
                         </div>
                       )}
@@ -1091,7 +1089,7 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                           padColorTheme === 'teal' ? 'text-teal-850' :
                           padColorTheme === 'amber' ? 'text-amber-850' :
                           padColorTheme === 'rose' ? 'text-rose-850' : 'text-indigo-850'
-                        }`}>O/E (পরীক্ষা):</span>
+                        }`}>O/E (Examination):</span>
                         <ul className="space-y-1 mt-1 text-slate-600 font-sans">
                           {currentPatient.bp && <li>• BP: <strong className="text-slate-800">{currentPatient.bp}</strong></li>}
                           {currentPatient.pulse && <li>• Pulse: <strong className="text-slate-800">{currentPatient.pulse}/Min</strong></li>}
@@ -1108,7 +1106,7 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                             padColorTheme === 'teal' ? 'text-teal-850' :
                             padColorTheme === 'amber' ? 'text-amber-850' :
                             padColorTheme === 'rose' ? 'text-rose-850' : 'text-indigo-850'
-                          }`}>Ix (পরীক্ষা):</span>
+                          }`}>Ix (Investigations):</span>
                           <p className="whitespace-pre-line text-slate-600 leading-relaxed font-sans mt-0.5">{currentPatient.ix}</p>
                         </div>
                       )}
@@ -1121,16 +1119,15 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                           padColorTheme === 'amber' ? 'bg-amber-50/50 border-amber-150' :
                           padColorTheme === 'rose' ? 'bg-rose-50/50 border-rose-150' : 'bg-indigo-50/50 border-indigo-150'
                         }`}>
-                          <span className="font-bold font-sans text-slate-500 block text-[9px] uppercase">Dx (রোগ নির্নয়):</span>
+                          <span className="font-bold font-sans text-slate-500 block text-[9px] uppercase">Dx (Diagnosis):</span>
                           <p className="text-slate-900 font-sans font-bold text-[11px] leading-tight">{currentPatient.dx}</p>
                         </div>
                       )}
                     </div>
 
-                    {/* Prescription Rx column right (Cols 8) */}
+                    {/* Medication list */}
                     <div className="col-span-8 pl-1 space-y-4">
                       
-                      {/* Rx Initial Text */}
                       <span className={`font-serif font-extrabold text-3xl block transition-colors ${
                         padColorTheme === 'blue' ? 'text-blue-600' :
                         padColorTheme === 'emerald' ? 'text-emerald-600' :
@@ -1139,7 +1136,6 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                         padColorTheme === 'rose' ? 'text-rose-600' : 'text-indigo-600'
                       }`}>Rx.</span>
                       
-                      {/* Prescribed Drug items mapping */}
                       {rxDrugs.length === 0 ? (
                         <div className="text-center py-8 text-slate-400 border border-dashed rounded text-xs select-none">
                           No medications added to Rx. Use the compiler block above to prescribe.
@@ -1158,14 +1154,14 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                                 <div className="flex flex-wrap items-center gap-1.5">
                                   <span className="font-extrabold text-slate-900">{i + 1}. {rd.brandName}</span>
                                   {rd.beforeFood && (
-                                    <span className="text-[9px] bg-red-100 text-red-800 px-1.5 py-0.2 rounded font-sans font-medium">খাওয়ার পূর্বে</span>
+                                    <span className="text-[9px] bg-red-100 text-red-800 px-1.5 py-0.2 rounded font-sans font-medium">Before food</span>
                                   )}
                                   {rd.afterFood && (
-                                    <span className="text-[9px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded font-sans font-medium">খাওয়ার পরে</span>
+                                    <span className="text-[9px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded font-sans font-medium">After food</span>
                                   )}
                                 </div>
                                 <div className="text-slate-600 font-medium">
-                                  Dose (মাত্রা): <strong className="text-slate-900 font-bold">{rd.dose}</strong> — {rd.duration} {rd.durationUnit}
+                                  Dose: <strong className="text-slate-900 font-bold">{rd.dose}</strong> — {rd.duration} {rd.durationUnit}
                                 </div>
                               </div>
                               <button 
@@ -1180,7 +1176,6 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                         </ol>
                       )}
 
-                      {/* Revisit directive bar */}
                       <div className="pt-4 border-t border-slate-100 text-[10px] text-slate-600">
                         <span>Re-visit Chamber instructions: </span>
                         <strong className="text-slate-950 font-sans">After 15 Days</strong> or as necessary. Re-appointment necessary.
@@ -1189,7 +1184,7 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
 
                   </div>
 
-                  {/* Aesthetic Footer Block with dynamic Barcode */}
+                  {/* Footer advice and optional barcode illustration */}
                   <div 
                     className={`border-t pt-2.5 mt-4 flex justify-between items-center text-[9px] text-slate-500 font-sans transition-colors duration-300 ${
                       padColorTheme === 'blue' ? 'border-blue-400' :
@@ -1200,13 +1195,17 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                     }`}
                   >
                     <div>
-                      <p className="font-medium text-slate-700">{headerSettings.footerText}</p>
+                      <p className="font-medium text-slate-700">
+                        {headerSettings.footerText === 'নিয়ম মাফিক ঔষধ খাইবেন। ডাক্তারের পরামর্শ ব্যতীত ঔষধ পরিবর্তন নিষেধ।'
+                          ? "Take medicines exactly as directed. Do not change any medicine without your doctor's advice."
+                          : headerSettings.footerText}
+                      </p>
                       <p className="font-sans text-[8px] mt-0.5 text-slate-400">Software generated prescription. Powered by Prescription Writer BD client.</p>
                     </div>
                     {headerSettings.displayBarcode && (
                       <div className="flex flex-col items-center">
                         <div className="bg-slate-950 block h-6 w-20 relative p-0.5">
-                          {/* Simulated Barcode Vectors */}
+                          {/* Decorative bars only; they do not encode the registration number. */}
                           <div className="absolute inset-x-0 inset-y-0.5 flex justify-around">
                             <span className="w-0.5 bg-white h-full"></span>
                             <span className="w-[1px] bg-white h-full"></span>
@@ -1228,7 +1227,7 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
           </div>
         )}
 
-        {/* TAB 2: SAVED PATIENTS HISTORY */}
+        {/* ---------- Saved patients ---------- */}
         {activeTab === 'AllSaved' && (
           <div className="bg-slate-900 border border-slate-850 p-6 rounded-xl space-y-4" id="view-patients-history-tab">
             <div className="flex flex-wrap justify-between items-center gap-4 border-b border-slate-800 pb-3">
@@ -1237,7 +1236,6 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                 <p className="text-xs text-slate-400">Total registered profiles loaded locally: {patients.length}</p>
               </div>
 
-              {/* Patient Search */}
               <div className="relative w-64">
                 <input 
                   type="text"
@@ -1288,16 +1286,15 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
           </div>
         )}
 
-        {/* TAB 3: BD BRAND pharma DIRECTORY */}
+        {/* ---------- Local brand index ---------- */}
         {activeTab === 'Directory' && (
           <div className="bg-slate-900 border border-slate-850 p-6 rounded-xl space-y-4" id="view-brand-directory-tab">
             <div className="flex flex-wrap justify-between items-center gap-4 border-b border-slate-800 pb-3">
               <div>
                 <h2 className="text-xl font-bold">Bangladeshi Pharma Brand Index</h2>
-                <p className="text-xs text-slate-400">DGDA Registered Drugs loaded locally for immediate offline search</p>
+                <p className="text-xs text-slate-400">Local demonstration data for informational search</p>
               </div>
 
-              {/* Directory Filter Input */}
               <div className="relative w-80">
                 <input 
                   type="text"
@@ -1308,6 +1305,10 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                 />
                 <Search className="w-4 h-4 text-slate-500 absolute left-2.5 top-2.5" />
               </div>
+            </div>
+
+            <div className="rounded-lg border border-amber-800/60 bg-amber-950/40 p-3 text-xs text-amber-200">
+              <strong>Informational demonstration only.</strong> Verify every product, indication and manufacturer against current authoritative sources before clinical use. This index does not provide medical advice or prescribing recommendations.
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1344,15 +1345,14 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
           </div>
         )}
 
-        {/* TAB 4: APPOINTMENTS Hub */}
+        {/* ---------- Appointments ---------- */}
         {activeTab === 'Appointments' && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6" id="view-appointments-hub">
             
-            {/* Left Column Serial Booking Input */}
+            {/* Booking form */}
             <div className="lg:col-span-4 bg-slate-900 border border-slate-850 p-5 rounded-xl space-y-4">
               <h3 className="text-sm font-bold border-b border-slate-800 pb-2">Schedule Patient Serial Booking</h3>
               
-              {/* Form elements for appointments booking */}
               <form onSubmit={(e) => {
                 e.preventDefault();
                 const form = e.currentTarget;
@@ -1396,7 +1396,7 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
               </form>
             </div>
 
-            {/* Right Column List of Appointments */}
+            {/* Appointment list */}
             <div className="lg:col-span-8 bg-slate-900 border border-slate-850 p-5 rounded-xl space-y-4">
               <div className="flex justify-between items-center border-b border-slate-800 pb-2">
                 <h3 className="text-sm font-bold">Chamber Serial Records List</h3>
@@ -1509,7 +1509,7 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
           </div>
         )}
 
-        {/* TAB 5: PAYMENTS ledger tracking */}
+        {/* ---------- Local payment records ---------- */}
         {activeTab === 'Payments' && (
           <div className="bg-slate-900 border border-slate-850 p-6 rounded-xl space-y-4" id="view-payments-ledger-tab">
             <div className="flex flex-wrap justify-between items-center border-b border-slate-800 pb-3">
@@ -1552,13 +1552,13 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
           </div>
         )}
 
-        {/* TAB 6: SMS ALERT MODEM INTERACTION */}
+        {/* ---------- SMS simulation ---------- */}
         {activeTab === 'SMS' && (
           <div className="bg-slate-900 border border-slate-850 p-6 rounded-xl space-y-5" id="view-sms-router-tab">
             <div className="border-b border-slate-800 pb-3 flex justify-between items-center">
               <div>
-                <h2 className="text-xl font-bold">GP / Robi Integration Alert Router</h2>
-                <p className="text-xs text-slate-400">Transmit medication schedules and dosage reminders to patient handsets</p>
+                <h2 className="text-xl font-bold">SMS Reminder Simulator</h2>
+                <p className="text-xs text-slate-400">UI demonstration only — no message is sent to any handset</p>
               </div>
               <div className="p-3 bg-slate-950 rounded border border-slate-800 text-right">
                 <span className="text-[10px] text-slate-400 block font-mono">Core SMS Credits Left:</span>
@@ -1574,7 +1574,7 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                     <label className="block text-slate-400 mb-1">Mobile Carrier Prefix</label>
                     <input 
                       type="text" 
-                      placeholder="e.g. 01700000000" 
+                      placeholder="e.g. 00000000000"
                       value={smsMobile}
                       onChange={(e) => setSmsMobile(e.target.value)}
                       className="w-full bg-slate-950 border border-slate-800 p-2 rounded tracking-wider font-mono"
@@ -1584,7 +1584,7 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                     <label className="block text-slate-400 mb-1">Alert Reminders Content</label>
                     <textarea 
                       rows={4}
-                      placeholder="e.g. Dr. Musafir chamber alert: Dear Mr. Muhammad, please consume Napa Extend dose at breakfast as scheduled. Fasting blood test advised tomorrow."
+                      placeholder="Demo reminder text — no real patient information"
                       value={smsMessage}
                       onChange={(e) => setSmsMessage(e.target.value)}
                       className="w-full bg-slate-950 border border-slate-800 p-2 rounded text-[11px]"
@@ -1608,35 +1608,35 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                   {smsOutcome === 'success' && (
                     <div className="bg-emerald-950 text-emerald-400 border border-emerald-900 p-3 rounded flex items-center gap-2">
                       <Check className="w-4 h-4" />
-                      <span>Remote SMS Modem transmitted packet Successfully! Carrier payload delivered.</span>
+                      <span>Simulation complete. No SMS or carrier payload was sent.</span>
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* bKash Recharging simulator inside the sidebar menu */}
+              {/* Demo recharge buttons only update the credit counter. */}
               <div className="bg-slate-950 p-5 rounded-lg border border-slate-850 space-y-4">
                 <h4 className="font-bold text-white text-sm border-b border-slate-850 pb-2 flex items-center">
                   <Coins className="w-4 h-4 mr-1.5 text-pink-500" />
-                  bKash / Nagad Instant Credit Recharge
+                  Simulated bKash / Nagad Credit Recharge
                 </h4>
                 <div className="text-slate-400 leading-relaxed text-[11px] space-y-2">
                   <p>
                     Recharge SMS pools to automate reminders for pregnant EDD mothers and high glycemic index insulin targets.
                   </p>
                   <div className="grid grid-cols-3 gap-2 py-2">
-                    <button onClick={() => { setSmsBalance(b => b + 1000); alert("Recharged 1,000 credits via bKash gateway!"); }} className="bg-pink-700 hover:bg-pink-800 text-white font-bold py-2 rounded">
+                    <button onClick={() => { setSmsBalance(b => b + 1000); alert("Added 1,000 simulated SMS credits."); }} className="bg-pink-700 hover:bg-pink-800 text-white font-bold py-2 rounded">
                       ৳৩০০ / 1,000 SMS
                     </button>
-                    <button onClick={() => { setSmsBalance(b => b + 5000); alert("Recharged 5,000 credits via bKash gateway!"); }} className="bg-pink-700 hover:bg-pink-800 text-white font-bold py-2 rounded">
+                    <button onClick={() => { setSmsBalance(b => b + 5000); alert("Added 5,000 simulated SMS credits."); }} className="bg-pink-700 hover:bg-pink-800 text-white font-bold py-2 rounded">
                       ৳১,২৫০ / 5,000 SMS
                     </button>
-                    <button onClick={() => { setSmsBalance(b => b + 15000); alert("Recharged 15,000 credits via bKash gateway!"); }} className="bg-pink-700 hover:bg-pink-800 text-white font-bold py-2 rounded">
+                    <button onClick={() => { setSmsBalance(b => b + 15000); alert("Added 15,000 simulated SMS credits."); }} className="bg-pink-700 hover:bg-pink-800 text-white font-bold py-2 rounded">
                       ৳৩,০০০ / 15,000 SMS
                     </button>
                   </div>
                   <p className="font-mono text-[9px] text-[#E5B620]">
-                    * Instant API keys binding under Zilsoft SMS Router integration standard.
+                    * Prototype state only. No carrier, bKash, Nagad or payment API is connected.
                   </p>
                 </div>
               </div>
@@ -1644,7 +1644,7 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
           </div>
         )}
 
-        {/* TAB 7: CHAMBER HEADER TITLE EDIT */}
+        {/* ---------- Prescription header settings ---------- */}
         {activeTab === 'HeaderEdit' && (
           <div className="bg-slate-900 border border-slate-850 p-6 rounded-xl space-y-4" id="view-header-edit-tab">
             <div>
@@ -1747,7 +1747,7 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
           </div>
         )}
 
-        {/* TAB 8: CENTIMETER PAGE setup CALL */}
+        {/* ---------- Page dimensions ---------- */}
         {activeTab === 'PageSetup' && (
           <PageLayoutSimulator 
             settings={pageSetup} 
@@ -1759,7 +1759,7 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
         {activeTab === 'AiScribe' && (
           <AiScribe
             patient={currentPatient}
-            onApplyReviewedDraft={handleUpdatePatient}
+            onApplyReviewedDraft={handleApplyAiScribeDraft}
             backendStatus={backendStatus}
             accessToken={accessToken}
             isDemo={isDemo}
@@ -1770,7 +1770,7 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
 
       </main>
 
-      {/* 3. SIMULATED PRINT LAYOUT MODAL */}
+      {/* ---------- Print preview ---------- */}
       {showPrintModal && (
         <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 no-print-overlay">
           <div className="bg-white text-slate-900 rounded-xl max-w-2xl w-full p-6 space-y-5 flex flex-col max-h-[90vh] no-print-box">
@@ -1790,7 +1790,7 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
               </button>
             </div>
 
-            {/* Modal Body: Miniature printed layout */}
+            {/* Print CSS exposes only .printable-pad-content. */}
             <div className="flex-1 overflow-y-auto bg-slate-100 p-4 rounded-lg flex justify-center no-print-body">
               
               <div 
@@ -1806,7 +1806,6 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                   fontSize: `${pageSetup.printFontSize}pt`
                 }}
               >
-                {/* Condition: With or without Header */}
                 {printWithHeaderMode ? (
                   <div 
                     className={`border-b-2 pb-3 mb-6 flex justify-between items-start text-xs transition-colors duration-300 ${
@@ -1849,7 +1848,7 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                     </div>
                   </div>
                 ) : (
-                  // Blank Space Header mirroring predefined pad height
+                  // Reserve space for a preprinted header in the preview.
                   <div 
                     className="border-b border-dashed border-slate-200 mb-6 flex items-center justify-center text-[10px] text-slate-400 font-mono"
                     style={{ height: `${pageSetup.header.height * 10}px` }}
@@ -1858,7 +1857,7 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                   </div>
                 )}
 
-                {/* Patient Bar */}
+                {/* Patient summary */}
                 <div 
                   className={`p-2.5 rounded border grid grid-cols-4 gap-2 text-[10px] font-medium transition-colors duration-300 mb-6 ${
                     padColorTheme === 'blue' ? 'bg-blue-50/70 border-blue-200 text-blue-900' :
@@ -1869,7 +1868,7 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                   }`}
                 >
                   <div>
-                    <span className="text-slate-500 block uppercase text-[8px] font-bold">Patient Name (নাম)</span>
+                    <span className="text-slate-500 block uppercase text-[8px] font-bold">Patient Name</span>
                     <strong className="text-slate-950 text-[11px] leading-tight font-sans">{currentPatient.name}</strong>
                   </div>
                   <div>
@@ -1877,7 +1876,7 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                     <strong className="text-slate-950 text-[11px] font-sans">{currentPatient.age} Yrs / {currentPatient.sex}</strong>
                   </div>
                   <div>
-                    <span className="text-slate-500 block uppercase text-[8px] font-bold">Date (তারিখ)</span>
+                    <span className="text-slate-500 block uppercase text-[8px] font-bold">Date</span>
                     <strong className="text-slate-950 text-[11px] font-sans">{currentPatient.date}</strong>
                   </div>
                   <div>
@@ -1886,10 +1885,9 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                   </div>
                 </div>
 
-                {/* Body Core Columns representation */}
                 <div className="grid grid-cols-12 gap-6 min-h-[400px]">
                   
-                  {/* History Left */}
+                  {/* Clinical details */}
                   <div className="col-span-4 border-r pr-4 text-[11px] space-y-4 font-sans">
                     {currentPatient.cc && (
                       <div>
@@ -1899,7 +1897,7 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                           padColorTheme === 'teal' ? 'text-teal-850' :
                           padColorTheme === 'amber' ? 'text-amber-850' :
                           padColorTheme === 'rose' ? 'text-rose-850' : 'text-indigo-850'
-                        }`}>C/C (উপসর্গ):</span>
+                        }`}>C/C (Chief Complaints):</span>
                         <p className="whitespace-pre-line text-slate-600 leading-relaxed font-sans mt-0.5">{currentPatient.cc}</p>
                       </div>
                     )}
@@ -1910,7 +1908,7 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                         padColorTheme === 'teal' ? 'text-teal-850' :
                         padColorTheme === 'amber' ? 'text-amber-850' :
                         padColorTheme === 'rose' ? 'text-rose-850' : 'text-indigo-850'
-                      }`}>O/E (শারীরিক পরীক্ষা):</span>
+                      }`}>O/E (Examination):</span>
                       <ul className="space-y-1 mt-1 text-slate-600 font-sans">
                         {currentPatient.bp && <li>• BP: <strong className="text-slate-800">{currentPatient.bp}</strong></li>}
                         {currentPatient.pulse && <li>• Pulse: <strong className="text-slate-800">{currentPatient.pulse}/Min</strong></li>}
@@ -1925,7 +1923,7 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                           padColorTheme === 'teal' ? 'text-teal-850' :
                           padColorTheme === 'amber' ? 'text-amber-850' :
                           padColorTheme === 'rose' ? 'text-rose-850' : 'text-indigo-850'
-                        }`}>Ix (পরীক্ষা সমূহ):</span>
+                        }`}>Ix (Investigations):</span>
                         <p className="whitespace-pre-line text-slate-600 leading-relaxed font-sans mt-0.5">{currentPatient.ix}</p>
                       </div>
                     )}
@@ -1937,13 +1935,13 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                         padColorTheme === 'amber' ? 'bg-amber-50/50 border-amber-150' :
                         padColorTheme === 'rose' ? 'bg-rose-50/50 border-rose-150' : 'bg-indigo-50/50 border-indigo-150'
                       }`}>
-                        <span className="font-bold font-sans text-slate-500 block text-[9px] uppercase">Dx (রোগ নির্নয়):</span>
+                        <span className="font-bold font-sans text-slate-500 block text-[9px] uppercase">Dx (Diagnosis):</span>
                         <p className="text-slate-900 font-sans font-bold text-[11px] leading-tight">{currentPatient.dx}</p>
                       </div>
                     )}
                   </div>
 
-                  {/* Rx Right Column */}
+                  {/* Medication list */}
                   <div className="col-span-8 pl-1 space-y-4">
                     <span className={`font-serif font-extrabold text-3xl block transition-colors ${
                       padColorTheme === 'blue' ? 'text-blue-600' :
@@ -1965,14 +1963,14 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                             <div className="flex flex-wrap items-center gap-1.5">
                               <span className="font-extrabold text-slate-900">{i + 1}. {rd.brandName}</span>
                               {rd.beforeFood && (
-                                <span className="text-[9px] bg-red-105 text-red-800 px-1.5 py-0.2 rounded font-sans font-medium">খাওয়ার পূর্বে</span>
+                                <span className="text-[9px] bg-red-105 text-red-800 px-1.5 py-0.2 rounded font-sans font-medium">Before food</span>
                               )}
                               {rd.afterFood && (
-                                <span className="text-[9px] bg-emerald-105 text-emerald-800 px-1.5 py-0.2 rounded font-sans font-medium">খাওয়ার পরে</span>
+                                <span className="text-[9px] bg-emerald-105 text-emerald-800 px-1.5 py-0.2 rounded font-sans font-medium">After food</span>
                               )}
                             </div>
                             <div className="text-slate-600 font-medium">
-                              Dose (মাত্রা): <strong className="text-slate-900 font-bold">{rd.dose}</strong> — {rd.duration} {rd.durationUnit}
+                              Dose: <strong className="text-slate-900 font-bold">{rd.dose}</strong> — {rd.duration} {rd.durationUnit}
                             </div>
                           </div>
                         </li>
@@ -1998,7 +1996,11 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
                   }`}
                 >
                   <div>
-                    <p className="font-medium text-slate-705">{headerSettings.footerText}</p>
+                    <p className="font-medium text-slate-705">
+                      {headerSettings.footerText === 'নিয়ম মাফিক ঔষধ খাইবেন। ডাক্তারের পরামর্শ ব্যতীত ঔষধ পরিবর্তন নিষেধ।'
+                        ? "Take medicines exactly as directed. Do not change any medicine without your doctor's advice."
+                        : headerSettings.footerText}
+                    </p>
                     <p className="font-sans text-[8px] mt-0.5 text-slate-400">Software generated prescription. Powered by Prescription Writer BD client.</p>
                   </div>
                   {headerSettings.displayBarcode && (
@@ -2021,7 +2023,6 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
               </div>
             </div>
 
-            {/* Print trigger actions */}
             <div className="flex justify-end gap-2 border-t pt-3 no-print-footer">
               <button 
                 onClick={() => {
@@ -2043,12 +2044,14 @@ function Workspace({ backendStatus }: { backendStatus: BackendStatus }) {
         </div>
       )}
 
-      {/* 4. FOOTER CREDITS */}
       <footer className="bg-slate-950 border-t border-slate-900 py-6 text-center text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 space-y-1">
           <p>© 2026 Prescription Writer BD. All Rights Reserved. Fully localized for the healthcare professionals of Bangladesh.</p>
           <p className="font-mono text-[10px] text-slate-600">
-            Offline Enabled Workspace • Database Synchronizer Ready • bKash SMS Gateway v1.0.1
+            Local Demo Mode • Database Integration in Progress • SMS Gateway Simulated
+          </p>
+          <p className="text-[10px] text-slate-600">
+            Production requires PostgreSQL, stronger access controls, encryption, comprehensive audit logging, automated testing and applicable privacy, clinical and regulatory review.
           </p>
         </div>
       </footer>

@@ -1,3 +1,5 @@
+"""Doctor-scoped patient lookup and mutation routes."""
+
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
@@ -11,6 +13,7 @@ router = APIRouter(prefix="/api/patients", tags=["patients"])
 
 
 def owned_patient(patient_id: str, user: User, db: Session) -> Patient:
+    """Return an accessible patient or hide it behind HTTP 404."""
     patient = db.get(Patient, patient_id)
     if not patient or (user.role != "admin" and patient.doctor_id != user.id):
         raise HTTPException(status_code=404, detail="Patient not found")
@@ -19,6 +22,7 @@ def owned_patient(patient_id: str, user: User, db: Session) -> Patient:
 
 @router.get("", response_model=list[PatientPublic])
 def list_patients(q: str | None = None, db: Session = Depends(get_db), user: User = Depends(get_current_user)) -> list[Patient]:
+    """List accessible patients and optionally search by name or phone."""
     query = db.query(Patient)
     if user.role != "admin":
         query = query.filter(Patient.doctor_id == user.id)
@@ -30,6 +34,7 @@ def list_patients(q: str | None = None, db: Session = Depends(get_db), user: Use
 
 @router.post("", response_model=PatientPublic, status_code=status.HTTP_201_CREATED)
 def create_patient(payload: PatientCreate, db: Session = Depends(get_db), user: User = Depends(get_current_user)) -> Patient:
+    """Create a doctor-owned patient and record the action."""
     patient = Patient(**payload.model_dump(), doctor_id=user.id)
     db.add(patient)
     db.flush()
@@ -41,11 +46,13 @@ def create_patient(payload: PatientCreate, db: Session = Depends(get_db), user: 
 
 @router.get("/{patient_id}", response_model=PatientPublic)
 def get_patient(patient_id: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)) -> Patient:
+    """Return one patient when the current user can access it."""
     return owned_patient(patient_id, user, db)
 
 
 @router.patch("/{patient_id}", response_model=PatientPublic)
 def update_patient(patient_id: str, payload: PatientUpdate, db: Session = Depends(get_db), user: User = Depends(get_current_user)) -> Patient:
+    """Apply supplied patient fields and record the action."""
     patient = owned_patient(patient_id, user, db)
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(patient, field, value)
@@ -57,6 +64,7 @@ def update_patient(patient_id: str, payload: PatientUpdate, db: Session = Depend
 
 @router.delete("/{patient_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_patient(patient_id: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)) -> Response:
+    """Delete an accessible patient after adding an audit entry."""
     patient = owned_patient(patient_id, user, db)
     db.add(AuditLog(actor_id=user.id, action="patient.deleted", entity_type="patient", entity_id=patient.id))
     db.delete(patient)

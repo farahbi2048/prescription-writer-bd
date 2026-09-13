@@ -1,3 +1,4 @@
+/** Authentication state, API requests and browser token storage. */
 import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
 
 import { API_BASE_URL } from '../config';
@@ -26,12 +27,14 @@ type AuthContextValue = {
 const TOKEN_KEY = 'prescription_writer_access_token';
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+/** Parse an API response and turn unsuccessful responses into useful errors. */
 async function readResponse(response: Response) {
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(payload.detail || 'Request failed. Please try again.');
   return payload;
 }
 
+/** Provide the signed-in user and authentication actions to the application. */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
@@ -54,6 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setLoading(false));
   }, []);
 
+  /** Exchange an email and password for a stored access token. */
   const login = async ({ email, password }: LoginInput) => {
     if (!API_BASE_URL) throw new Error('The live backend is not configured yet. Use the portfolio demo for now.');
     const body = new URLSearchParams({ username: email, password });
@@ -68,6 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(payload.user);
   };
 
+  /** Create an account and sign in with the same credentials. */
   const register = async ({ fullName, email, password }: RegisterInput) => {
     if (!API_BASE_URL) throw new Error('The live backend is not configured yet. Use the portfolio demo for now.');
     const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
@@ -79,6 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await login({ email, password });
   };
 
+  /** Enter the local portfolio demo without creating an authenticated session. */
   const enterDemo = () => {
     localStorage.removeItem(TOKEN_KEY);
     setAccessToken(null);
@@ -91,6 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  /** Remove the local access token and clear the current user. */
   const logout = () => {
     localStorage.removeItem(TOKEN_KEY);
     setAccessToken(null);
@@ -105,6 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
+/** Read authentication state from the nearest provider. */
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) throw new Error('useAuth must be used within AuthProvider');

@@ -1,3 +1,7 @@
+/** Shared data shapes for the frontend workspace. */
+
+// ---------- Patient and prescription records ----------
+
 export interface Patient {
   id: string;
   name: string;
@@ -8,10 +12,10 @@ export interface Patient {
   regNo: string;
   appointmentId?: string;
   date: string;
-  dx: string; // Disease/Condition/Dx
-  cc: string; // Chief Complaints
+  dx: string; // Diagnosis
+  cc: string; // Chief complaints
   
-  // O/E (On Examination)
+  // Examination findings
   bp: string;
   pulse: string;
   temp: string;
@@ -23,16 +27,14 @@ export interface Patient {
   cyanosis: string;
   oedema: string;
 
-  // Investigations & History
-  ix: string;
+  ix: string; // Investigations
   drugHistory: string;
   
-  // Past, Present, Notes
   pastHistory: string;
   presentHistory: string;
   notes: string;
 
-  // Calculators
+  // Calculator inputs and displayed results are kept with the patient record.
   bmiWeight: string;
   bmiHeightFeet: string;
   bmiHeightInch: string;
@@ -64,7 +66,7 @@ export interface Patient {
   eddGestationalAge: string;
   eddCalculatedDate: string;
 
-  // Print checkboxes
+  // Stored print preferences; not all are used by the current print layout.
   printPastHist: boolean;
   printPresentHist: boolean;
   printNotesSettings: boolean;
@@ -119,6 +121,8 @@ export interface Prescription {
   notes: string;
 }
 
+// ---------- Medicine directory ----------
+
 export interface DrugItem {
   brand: string;
   generic: string;
@@ -126,6 +130,8 @@ export interface DrugItem {
   drugClass: string;
   company: string;
 }
+
+// ---------- Appointments and payments ----------
 
 export interface Appointment {
   id: string;
@@ -151,6 +157,8 @@ export interface PaymentRecord {
   mobile: string;
   amount: string;
 }
+
+// ---------- Print settings ----------
 
 export interface HeaderSettings {
   doctorName: string;
