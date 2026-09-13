@@ -1,3 +1,7 @@
+/** Shared data shapes for the frontend workspace. */
+
+// ---------- Patient and prescription records ----------
+
 export interface Patient {
   id: string;
   name: string;
@@ -117,6 +121,8 @@ export interface Prescription {
   notes: string;
 }
 
+// ---------- Medicine directory ----------
+
 export interface DrugItem {
   brand: string;
   generic: string;
@@ -124,6 +130,8 @@ export interface DrugItem {
   drugClass: string;
   company: string;
 }
+
+// ---------- Appointments and payments ----------
 
 export interface Appointment {
   id: string;
@@ -149,6 +157,8 @@ export interface PaymentRecord {
   mobile: string;
   amount: string;
 }
+
+// ---------- Print settings ----------
 
 export interface HeaderSettings {
   doctorName: string;

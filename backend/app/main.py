@@ -1,3 +1,5 @@
+"""Create the API application and register its middleware and routers."""
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -21,4 +23,5 @@ app.include_router(patients.router)
 
 @app.get("/health")
 def health() -> dict[str, str]:
+    """Return a small response for local and hosted health checks."""
     return {"status": "ok"}

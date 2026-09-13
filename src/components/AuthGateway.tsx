@@ -1,8 +1,10 @@
+/** Login and registration screen for the clinician workspace. */
 import { FormEvent, useState } from 'react';
 import { ArrowRight, LoaderCircle, ShieldCheck, Stethoscope } from 'lucide-react';
 
 import { useAuth } from '../context/AuthContext';
 
+/** Switch between login and registration while sharing one submit handler. */
 export default function AuthGateway() {
   const { login, register } = useAuth();
   const [mode, setMode] = useState<'login' | 'register'>('login');
@@ -12,6 +14,7 @@ export default function AuthGateway() {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  /** Submit credentials through the authentication context. */
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     setError('');

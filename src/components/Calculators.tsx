@@ -1,3 +1,4 @@
+/** Calculator panels that read and update fields on the current patient. */
 import React, { useState, useEffect } from 'react';
 import { Sparkles, Calculator, Activity, Calendar, Baby, Syringe } from 'lucide-react';
 import { Patient } from '../types';
@@ -7,10 +8,11 @@ interface CalculatorsProps {
   onUpdatePatient: (updated: Partial<Patient>) => void;
 }
 
+/** Recalculate only the panel that is currently selected. */
 export default function Calculators({ patient, onUpdatePatient }: CalculatorsProps) {
   const [activeCalcTab, setActiveCalcTab] = useState<'BMI' | 'Insulin' | 'Z-Score' | 'BMR' | 'EDD'>('BMI');
 
-  // Recalculate the active calculator when its inputs change.
+  // ---------- BMI ----------
   useEffect(() => {
     if (activeCalcTab === 'BMI') {
       const weight = parseFloat(patient.bmiWeight);
@@ -41,6 +43,8 @@ export default function Calculators({ patient, onUpdatePatient }: CalculatorsPro
       }
     }
   }, [patient.bmiWeight, patient.bmiHeightFeet, patient.bmiHeightInch, activeCalcTab]);
+
+  // ---------- Insulin split ----------
 
   useEffect(() => {
     if (activeCalcTab === 'Insulin') {
@@ -73,6 +77,8 @@ export default function Calculators({ patient, onUpdatePatient }: CalculatorsPro
     }
   }, [patient.insulinWeight, patient.insulinUnitPerKg, patient.insulinTime, activeCalcTab]);
 
+  // ---------- Basal metabolic rate ----------
+
   useEffect(() => {
     if (activeCalcTab === 'BMR') {
       const weight = parseFloat(patient.bmrWeight);
@@ -104,6 +110,8 @@ export default function Calculators({ patient, onUpdatePatient }: CalculatorsPro
     }
   }, [patient.bmrWeight, patient.bmrHeightFeet, patient.bmrHeightInch, patient.bmrAge, patient.bmrGender, patient.bmrActivity, activeCalcTab]);
 
+  // ---------- Estimated delivery date ----------
+
   useEffect(() => {
     if (activeCalcTab === 'EDD' && patient.eddLmp) {
       const lmpDate = new Date(patient.eddLmp);
@@ -126,6 +134,8 @@ export default function Calculators({ patient, onUpdatePatient }: CalculatorsPro
       }
     }
   }, [patient.eddLmp, activeCalcTab]);
+
+  // ---------- Growth-screening placeholder ----------
 
   useEffect(() => {
     if (activeCalcTab === 'Z-Score' && patient.zDob) {

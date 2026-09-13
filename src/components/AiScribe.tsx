@@ -1,3 +1,4 @@
+/** Audio upload and review screen for AI-generated SOAP drafts. */
 import React, { useState } from 'react';
 import { AlertTriangle, AudioLines, CheckCircle2, FileAudio, LoaderCircle, ShieldAlert } from 'lucide-react';
 import { Patient } from '../types';
@@ -31,6 +32,7 @@ interface AiScribeProps {
 
 const API_BASE_URL = import.meta.env.VITE_MEDSCRIBE_API_URL || 'http://localhost:8000';
 
+/** Collect, review and apply an AI Scribe draft to the selected patient. */
 export default function AiScribe({ patient, onApplyReviewedDraft }: AiScribeProps) {
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [draft, setDraft] = useState<SoapDraft | null>(null);
@@ -39,10 +41,12 @@ export default function AiScribe({ patient, onApplyReviewedDraft }: AiScribeProp
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
 
+  /** Update one editable field without replacing the rest of the draft. */
   const updateDraft = (field: keyof SoapDraft, value: string) => {
     setDraft((current) => current ? { ...current, [field]: value } : current);
   };
 
+  /** Upload the chosen recording and store the structured API response. */
   const analyseAudio = async () => {
     if (!audioFile) {
       setError('Select an MP3 or WAV visit recording first.');
@@ -74,6 +78,7 @@ export default function AiScribe({ patient, onApplyReviewedDraft }: AiScribeProp
     }
   };
 
+  /** Map reviewed SOAP fields to patient fields used by the prescription pad. */
   const applyReviewedDraft = () => {
     if (!draft) return;
     const notes = [

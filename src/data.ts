@@ -1,6 +1,9 @@
+/** Fictional records and defaults used to start the local demonstration. */
 import { DrugItem, Patient, Appointment, PaymentRecord, HeaderSettings, PageSetupSettings } from './types';
 
 // All preloaded people, contact details and clinical records below are fictional demo data.
+
+// ---------- Medicine index ----------
 
 export const INITIAL_DRUGS: DrugItem[] = [
   { brand: "Napa Extend 665mg", generic: "Paracetamol", indication: "Fever, Osteoarthritis, Backache", drugClass: "Analgesics", company: "Beximco Pharmaceuticals Ltd." },
@@ -80,6 +83,8 @@ export const INITIAL_DRUGS: DrugItem[] = [
   { brand: "Gavisol 200ml (Syp)", generic: "Sodium Alginate + Sodium Bicarbonate", indication: "Heartburn, acid indigestion", drugClass: "Antacids", company: "Square Pharmaceuticals Ltd." },
   { brand: "Windel 100ml (Syp)", generic: "Salbutamol", indication: "Asthmatic bronchospasm relief", drugClass: "Bronchodilators", company: "Square Pharmaceuticals Ltd." },
 ];
+
+// ---------- Patient records ----------
 
 export const INITIAL_PATIENTS: Patient[] = [
   {
@@ -211,6 +216,8 @@ export const INITIAL_PATIENTS: Patient[] = [
   }
 ];
 
+// ---------- Appointments and payments ----------
+
 export const INITIAL_APPOINTMENTS: Appointment[] = [
   { id: "ap-1", date: "2026-05-20", status: "Pending", serial: 1, regNo: "145162", apntNo: "APN-902", name: "Demo Patient Beta", age: "45", sex: "F", mobile: "00000000002", address: "Demo City", paid: "300" },
   { id: "ap-2", date: "2026-05-20", status: "Completed", serial: 2, regNo: "112589", apntNo: "APN-903", name: "Demo Patient Alpha", age: "32", sex: "M", mobile: "00000000001", address: "Demo District", paid: "300" },
@@ -221,6 +228,8 @@ export const INITIAL_PAYMENTS: PaymentRecord[] = [
   { id: "pay-1", date: "2026-05-19", regNo: "112589", name: "Demo Patient Alpha", address: "Demo District, Bangladesh", mobile: "00000000001", amount: "300" },
   { id: "pay-2", date: "2026-05-18", regNo: "145162", name: "Demo Patient Beta", address: "Demo City, Bangladesh", mobile: "00000000002", amount: "300" }
 ];
+
+// ---------- Prescription defaults ----------
 
 export const INITIAL_HEADER_SETTINGS: HeaderSettings = {
   doctorName: "Dr. Demo Clinician",

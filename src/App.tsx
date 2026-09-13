@@ -1,3 +1,4 @@
+/** Main workspace, local records, prescription editing and print preview. */
 import React, { useState, useEffect } from 'react';
 import { 
   Users, 
@@ -45,6 +46,8 @@ export default function App() {
   if (!user) return <AuthGateway />;
   return <AuthenticatedWorkspace />;
 }
+
+// ---------- Workspace state ----------
 
 function AuthenticatedWorkspace() {
   const { user: authenticatedUser, logout } = useAuth();
@@ -97,7 +100,7 @@ function AuthenticatedWorkspace() {
     { id: 'rx-3', brandName: 'Rosuva 10mg', dose: '0+0+1', duration: '30', durationUnit: 'Days', beforeFood: false, afterFood: true }
   ]);
 
-  // Medication entry
+  // ---------- Medication entry ----------
   const [drugSearchQuery, setDrugSearchQuery] = useState('');
   const [selectedBrand, setSelectedBrand] = useState({ brand: '', generic: '', company: '' });
   const [drugDose, setDrugDose] = useState('1+0+1');
@@ -106,7 +109,7 @@ function AuthenticatedWorkspace() {
   const [beforeFood, setBeforeFood] = useState(false);
   const [afterFood, setAfterFood] = useState(true);
 
-  // Prescription appearance
+  // ---------- Prescription appearance ----------
   const [padColorTheme, setPadColorTheme] = useState<'blue' | 'emerald' | 'teal' | 'amber' | 'rose' | 'indigo'>('blue');
   const [padFontSizeTheme, setPadFontSizeTheme] = useState<'small' | 'medium' | 'large'>('medium');
 
@@ -117,12 +120,14 @@ function AuthenticatedWorkspace() {
   const [showPrintModal, setShowPrintModal] = useState(false);
   const [printWithHeaderMode, setPrintWithHeaderMode] = useState(true);
 
-  // SMS credits and results are simulated for the current session.
+  // ---------- SMS demonstration ----------
+  // Credits and results are simulated for the current session.
   const [smsBalance, setSmsBalance] = useState(1480);
   const [smsMobile, setSmsMobile] = useState('');
   const [smsMessage, setSmsMessage] = useState('');
   const [smsOutcome, setSmsOutcome] = useState('');
 
+  // ---------- Browser storage ----------
   // Save each collection when its state changes.
   useEffect(() => {
     localStorage.setItem('bd_prescription_patients', JSON.stringify(patients));
@@ -144,6 +149,7 @@ function AuthenticatedWorkspace() {
     localStorage.setItem('bd_prescription_page_setup', JSON.stringify(pageSetup));
   }, [pageSetup]);
 
+  /** Load a saved patient into the editor with the current demo medicines. */
   const handleSelectPatient = (p: Patient) => {
     setCurrentPatient({ ...p });
     // Saved patients do not include medications yet; loading one resets these demo items.
@@ -154,15 +160,18 @@ function AuthenticatedWorkspace() {
     setActiveTab('PrescriptionPad');
   };
 
+  /** Merge edited fields into the patient currently open in the workspace. */
   const handleUpdatePatient = (updated: Partial<Patient>) => {
     setCurrentPatient(prev => ({ ...prev, ...updated }));
   };
 
+  /** Copy reviewed Scribe fields into the current patient and reopen the pad. */
   const handleApplyAiScribeDraft = (updated: Partial<Patient>) => {
     setCurrentPatient(prev => ({ ...prev, ...updated }));
     setActiveTab('PrescriptionPad');
   };
 
+  /** Create a blank demo patient and open the prescription editor. */
   const handleCreateEmptyPatient = () => {
     const newReg = Math.floor(100000 + Math.random() * 900000).toString();
     const fresh: Patient = {
@@ -235,8 +244,11 @@ function AuthenticatedWorkspace() {
     setActiveTab('PrescriptionPad');
   };
 
-  // Save patient fields and a demo payment. The medication list is not persisted yet.
+  // ---------- Prescription actions ----------
+
+  /** Save patient fields and add a demo payment record. */
   const handleSavePrescription = () => {
+    // The medication list is not persisted yet.
     const existingIndex = patients.findIndex(p => p.id === currentPatient.id);
     let updatedList = [...patients];
     if (existingIndex > -1) {
@@ -272,6 +284,7 @@ function AuthenticatedWorkspace() {
     alert(`Prescription successfully compiled & saved locally!\nPatient ID: ${currentPatient.regNo}\nVisited Fee accounted: ৳${feeCollected}`);
   };
 
+  /** Add the selected medicine and its instructions to the current list. */
   const handleAddDrug = () => {
     if (!selectedBrand.brand) {
       alert("Please select or search a brand name first!");
@@ -291,10 +304,12 @@ function AuthenticatedWorkspace() {
     setSelectedBrand({ brand: '', generic: '', company: '' });
   };
 
+  /** Remove one medicine from the current prescription. */
   const handleDeleteDrug = (id: string) => {
     setRxDrugs(rxDrugs.filter(d => d.id !== id));
   };
 
+  // ---------- Search and navigation helpers ----------
   // Search the bundled brand list by brand or generic name.
   const filteredSuggestions = drugSearchQuery.trim()
     ? INITIAL_DRUGS.filter(d => 
@@ -303,12 +318,13 @@ function AuthenticatedWorkspace() {
       )
     : [];
 
-  // Open the preview; its Print button calls the browser print dialog.
+  /** Open the preview with either a generated or preprinted header. */
   const handleTriggerPrint = (withHeader: boolean) => {
     setPrintWithHeaderMode(withHeader);
     setShowPrintModal(true);
   };
 
+  /** Add an appointment to local state after checking the required fields. */
   const handleCreateAppointment = (name: string, mobile: string, age: string, sex: string) => {
     if (!name || !mobile) {
       alert("Please specify patient Name and Contact Mobile number!");
@@ -336,7 +352,7 @@ function AuthenticatedWorkspace() {
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 flex flex-col antialiased">
       
-      {/* Workspace header */}
+      {/* ---------- Workspace header ---------- */}
       <header className="bg-white border-b border-slate-200 shrink-0 sticky top-0 z-40 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 py-2.5 flex flex-wrap justify-between items-center gap-4">
           
@@ -484,7 +500,7 @@ function AuthenticatedWorkspace() {
           <strong>Portfolio demonstration:</strong> All preloaded patient, appointment, payment and clinician records are fictional. Do not enter real patient-identifiable information. AI output is a draft and requires clinician review before use.
         </div>
         
-        {/* Prescription editor */}
+        {/* ---------- Prescription editor ---------- */}
         {activeTab === 'PrescriptionPad' && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6" id="workspace-prescription-editor">
             
@@ -1189,7 +1205,7 @@ function AuthenticatedWorkspace() {
           </div>
         )}
 
-        {/* Saved patients */}
+        {/* ---------- Saved patients ---------- */}
         {activeTab === 'AllSaved' && (
           <div className="bg-slate-900 border border-slate-850 p-6 rounded-xl space-y-4" id="view-patients-history-tab">
             <div className="flex flex-wrap justify-between items-center gap-4 border-b border-slate-800 pb-3">
@@ -1248,7 +1264,7 @@ function AuthenticatedWorkspace() {
           </div>
         )}
 
-        {/* Local brand index */}
+        {/* ---------- Local brand index ---------- */}
         {activeTab === 'Directory' && (
           <div className="bg-slate-900 border border-slate-850 p-6 rounded-xl space-y-4" id="view-brand-directory-tab">
             <div className="flex flex-wrap justify-between items-center gap-4 border-b border-slate-800 pb-3">
@@ -1307,7 +1323,7 @@ function AuthenticatedWorkspace() {
           </div>
         )}
 
-        {/* Appointments */}
+        {/* ---------- Appointments ---------- */}
         {activeTab === 'Appointments' && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6" id="view-appointments-hub">
             
@@ -1471,7 +1487,7 @@ function AuthenticatedWorkspace() {
           </div>
         )}
 
-        {/* Local payment records */}
+        {/* ---------- Local payment records ---------- */}
         {activeTab === 'Payments' && (
           <div className="bg-slate-900 border border-slate-850 p-6 rounded-xl space-y-4" id="view-payments-ledger-tab">
             <div className="flex flex-wrap justify-between items-center border-b border-slate-800 pb-3">
@@ -1514,7 +1530,7 @@ function AuthenticatedWorkspace() {
           </div>
         )}
 
-        {/* SMS simulation */}
+        {/* ---------- SMS simulation ---------- */}
         {activeTab === 'SMS' && (
           <div className="bg-slate-900 border border-slate-850 p-6 rounded-xl space-y-5" id="view-sms-router-tab">
             <div className="border-b border-slate-800 pb-3 flex justify-between items-center">
@@ -1606,7 +1622,7 @@ function AuthenticatedWorkspace() {
           </div>
         )}
 
-        {/* Prescription header settings */}
+        {/* ---------- Prescription header settings ---------- */}
         {activeTab === 'HeaderEdit' && (
           <div className="bg-slate-900 border border-slate-850 p-6 rounded-xl space-y-4" id="view-header-edit-tab">
             <div>
@@ -1709,7 +1725,7 @@ function AuthenticatedWorkspace() {
           </div>
         )}
 
-        {/* Page dimensions */}
+        {/* ---------- Page dimensions ---------- */}
         {activeTab === 'PageSetup' && (
           <PageLayoutSimulator 
             settings={pageSetup} 
@@ -1729,7 +1745,7 @@ function AuthenticatedWorkspace() {
 
       </main>
 
-      {/* Print preview */}
+      {/* ---------- Print preview ---------- */}
       {showPrintModal && (
         <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 no-print-overlay">
           <div className="bg-white text-slate-900 rounded-xl max-w-2xl w-full p-6 space-y-5 flex flex-col max-h-[90vh] no-print-box">

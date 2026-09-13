@@ -1,3 +1,5 @@
+"""Response models retained for the earlier AI Scribe integration."""
+
 from typing import List
 
 from pydantic import BaseModel, Field
@@ -20,12 +22,16 @@ class SOAPNote(BaseModel):
 
 
 class DrugSafetyResult(BaseModel):
+    """Informational label result for one medicine."""
+
     drug_name: str
     status: str
     detail: str
 
 
 class VisitAnalysisResponse(BaseModel):
+    """SOAP draft, medicine lookups and review disclaimer."""
+
     soap_note: SOAPNote
     drug_safety: List[DrugSafetyResult]
     disclaimer: str

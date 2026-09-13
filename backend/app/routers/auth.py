@@ -1,3 +1,5 @@
+"""Account registration, login and current-user routes."""
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -13,6 +15,7 @@ router = APIRouter(prefix="/api/auth", tags=["authentication"])
 
 @router.post("/register", response_model=UserPublic, status_code=status.HTTP_201_CREATED)
 def register(payload: UserRegister, db: Session = Depends(get_db)) -> User:
+    """Create an account after checking that its email is available."""
     if db.query(User).filter(User.email == payload.email.lower()).first():
         raise HTTPException(status_code=409, detail="An account with this email already exists")
     user = User(full_name=payload.full_name, email=payload.email.lower(), password_hash=hash_password(payload.password))
@@ -24,6 +27,7 @@ def register(payload: UserRegister, db: Session = Depends(get_db)) -> User:
 
 @router.post("/login", response_model=Token)
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)) -> Token:
+    """Verify credentials and return a bearer token."""
     user = db.query(User).filter(User.email == form_data.username.lower()).first()
     if not user or not verify_password(form_data.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Incorrect email or password", headers={"WWW-Authenticate": "Bearer"})
@@ -32,4 +36,5 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 
 @router.get("/me", response_model=UserPublic)
 def me(current_user: User = Depends(get_current_user)) -> User:
+    """Return the account represented by the bearer token."""
     return current_user

@@ -1,3 +1,4 @@
+/** Controls and scaled preview for prescription page dimensions. */
 import React from 'react';
 import { PageSetupSettings } from '../types';
 
@@ -7,8 +8,10 @@ interface PageLayoutSimulatorProps {
   onReset: () => void;
 }
 
+/** Edit one section dimension at a time and preview the result. */
 export default function PageLayoutSimulator({ settings, onChangeSettings, onReset }: PageLayoutSimulatorProps) {
   
+  /** Copy one changed measurement into its section settings. */
   const handleDimensionChange = (
     section: 'header' | 'patient' | 'history' | 'mainPad' | 'footer' | 'totalPage',
     dimension: 'height' | 'width',
