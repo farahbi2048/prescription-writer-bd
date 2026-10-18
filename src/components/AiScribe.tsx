@@ -1,6 +1,6 @@
 /** Audio upload and review screen for AI-generated SOAP drafts. */
 import React, { useState } from 'react';
-import { AlertTriangle, AudioLines, CheckCircle2, FileAudio, LoaderCircle, ShieldAlert } from 'lucide-react';
+import { AlertTriangle, AudioLines, CheckCircle2, FileAudio, FileCheck2, LoaderCircle, ShieldAlert } from 'lucide-react';
 import { Patient } from '../types';
 import { BackendStatus, MEDSCRIBE_API_URL } from '../config';
 
@@ -26,6 +26,26 @@ type AnalysisResult = {
   disclaimer: string;
 };
 
+const PREPARED_SYNTHETIC_RESULT: AnalysisResult = {
+  soap_note: {
+    chief_complaint: 'Dry cough and low-grade fever for two days',
+    subjective: 'The fictional patient reports a dry cough, mild fever and tiredness for two days. They report no shortness of breath or chest pain in this prepared example.',
+    objective: 'No physical examination findings were included in the prepared synthetic recording.',
+    assessment: 'Possible viral upper respiratory tract infection, as stated by the fictional clinician. Requires clinician review.',
+    plan: 'The fictional clinician discussed rest, fluids and follow-up if symptoms worsen. No treatment or dosage should be inferred from this prepared example.',
+    medications_mentioned: ['Paracetamol'],
+    urgency_patient: 'Routine',
+  },
+  drug_safety: [
+    {
+      drug_name: 'Paracetamol',
+      status: 'prepared_example',
+      detail: 'Prepared demonstration content only. In the live workflow, this panel is populated from an informational OpenFDA label lookup.',
+    },
+  ],
+  disclaimer: 'Prepared synthetic example: no audio, Gemini or OpenFDA request was made. Review-only demonstration data; not for clinical use.',
+};
+
 interface AiScribeProps {
   patient: Patient;
   onApplyReviewedDraft: (updated: Partial<Patient>) => void;
@@ -42,6 +62,7 @@ export default function AiScribe({ patient, onApplyReviewedDraft, backendStatus,
   const [disclaimer, setDisclaimer] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
+  const [resultSource, setResultSource] = useState<'live' | 'prepared' | null>(null);
 
   /** Update one editable field without replacing the rest of the draft. */
   const updateDraft = (field: keyof SoapDraft, value: string) => {
@@ -86,11 +107,24 @@ export default function AiScribe({ patient, onApplyReviewedDraft, backendStatus,
       setDraft(result.soap_note);
       setDrugSafety(result.drug_safety);
       setDisclaimer(result.disclaimer);
+      setResultSource('live');
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : 'Could not contact the AI Scribe API.');
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  /** Load a transparent offline example when the external AI service cannot be demonstrated. */
+  const loadPreparedExample = () => {
+    setError('');
+    setDraft({
+      ...PREPARED_SYNTHETIC_RESULT.soap_note,
+      medications_mentioned: [...PREPARED_SYNTHETIC_RESULT.soap_note.medications_mentioned],
+    });
+    setDrugSafety(PREPARED_SYNTHETIC_RESULT.drug_safety.map((result) => ({ ...result })));
+    setDisclaimer(PREPARED_SYNTHETIC_RESULT.disclaimer);
+    setResultSource('prepared');
   };
 
   /** Map reviewed SOAP fields to patient fields used by the prescription pad. */
@@ -148,14 +182,26 @@ export default function AiScribe({ patient, onApplyReviewedDraft, backendStatus,
             : `AI backend: ${backendStatus === 'online' ? 'Ready' : backendStatus === 'starting' ? 'Starting…' : 'Unavailable'}`}
         </p>
         {error && <p className="mt-3 p-3 rounded bg-rose-50 text-rose-700 border border-rose-200 text-sm">{error}</p>}
+        <div className="mt-4 pt-4 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center gap-3">
+          <button onClick={loadPreparedExample} disabled={isProcessing} className="inline-flex items-center justify-center gap-2 bg-amber-50 hover:bg-amber-100 disabled:bg-slate-100 border border-amber-300 disabled:border-slate-200 text-amber-900 disabled:text-slate-400 text-sm font-bold px-4 py-2 rounded shadow-xs">
+            <FileCheck2 className="w-4 h-4" /> Load prepared synthetic example
+          </button>
+          <p className="text-[11px] text-slate-500">Offline fallback for demonstrations. It sends no audio or data to Gemini or OpenFDA.</p>
+        </div>
       </div>
 
       {draft && (
         <div className="space-y-5">
+          {resultSource === 'prepared' && (
+            <div className="bg-amber-50 border border-amber-300 text-amber-900 p-3 rounded-lg text-sm flex gap-2">
+              <FileCheck2 className="w-5 h-5 shrink-0" />
+              <span><strong>Prepared synthetic example loaded.</strong> This result was bundled for an offline demonstration; no AI or external drug-label request was made.</span>
+            </div>
+          )}
           <div className="bg-white border border-slate-200 p-5 rounded-xl shadow-xs">
             <div className="flex flex-wrap justify-between gap-3 mb-4">
               <div>
-                <h3 className="font-bold text-slate-800 text-sm">2. Review and edit extracted draft</h3>
+                <h3 className="font-bold text-slate-800 text-sm">2. Review and edit {resultSource === 'prepared' ? 'prepared synthetic' : 'AI-generated'} draft</h3>
                 <p className="text-xs text-slate-500 mt-1">Nothing is added until you apply the reviewed draft. You will then return to the selected patient’s Prescription Pad, where you must save the visit.</p>
               </div>
               <span className="self-start bg-amber-100 text-amber-800 border border-amber-200 px-2 py-1 rounded text-xs font-bold">Recorded urgency: {draft.urgency_patient}</span>
